@@ -1,0 +1,335 @@
+
+ACLS
+
+
+
+SITEP_FILTER_IN_VLAN10
+
+ip access-list extended SITEP_FILTER_IN_VLAN10
+permit ospf any any
+permit udp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 443
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 22
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 22
+
+
+SITEP_FILTER_OUT_VLAN10
+
+ip access-list extended SITEP_FILTER_OUT_VLAN10
+permit ospf any any
+permit udp host 10.0.1.2 eq 53 192.168.10.0 0.0.0.31
+permit tcp host 10.0.1.2 eq 53 192.168.10.0 0.0.0.31
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.1.3 eq 80 192.168.10.0 0.0.0.31
+permit tcp host 10.0.1.3 eq 443 192.168.10.0 0.0.0.31
+permit tcp host 10.0.1.2 eq 22 192.168.10.0 0.0.0.31
+permit tcp host 10.0.1.3 eq 22 192.168.10.0 0.0.0.31
+
+SITEP_FILTER_IN_VLAN20
+
+ip access-list extended SITEP_FILTER_IN_VLAN20
+permit ospf any any
+permit udp 192.168.20.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.3 eq 443
+
+
+
+SITEP_FILTER_OUT_VLAN20
+
+ip access-list extended SITEP_FILTER_OUT_VLAN20
+permit ospf any any
+permit udp host 10.0.1.2 eq 53 192.168.20.0 0.0.0.31
+permit tcp host 10.0.1.2 eq 53 192.168.20.0 0.0.0.31 
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.1.3 eq 80 192.168.20.0 0.0.0.31
+permit tcp host 10.0.1.3 eq 443 192.168.20.0 0.0.0.31
+
+
+SITEP_FILTER_IN_VLAN11
+
+ip access-list extended SITEP_FILTER_IN_VLAN11
+permit ospf any any
+permit udp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 53
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.3 eq 80
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.3 eq 443
+
+SITEP_FILTER_OUT_VLAN11
+
+ip access-list extended SITEP_FILTER_OUT_VLAN11
+permit ospf any any
+permit udp host 10.0.1.2 eq 53 192.168.11.0 0.0.0.15
+permit tcp host 10.0.1.2 eq 53 192.168.11.0 0.0.0.15
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.1.3 eq 80 192.168.11.0 0.0.0.15
+permit tcp host 10.0.1.3 eq 443 192.168.11.0 0.0.0.15
+
+
+SITEP_FILTER_IN_VLAN21
+
+ip access-list extended SITEP_FILTER_IN_VLAN21
+permit ospf any any
+permit udp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.3 eq 443
+
+SITEP_FILTER_OUT_VLAN21
+
+ip access-list extended SITEP_FILTER_OUT_VLAN21
+permit ospf any any
+permit udp host 10.0.1.2 eq 53 192.168.21.0 0.0.0.31
+permit tcp host 10.0.1.2 eq 53 192.168.21.0 0.0.0.31 
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.1.3 eq 80 192.168.21.0 0.0.0.31
+permit tcp host 10.0.1.3 eq 443 192.168.21.0 0.0.0.31
+
+ip access-list extended SERVEUR_FILTEUR_OUT 
+
+permit ospf any any
+
+permit udp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 67
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 443
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.2 eq 22
+permit tcp 192.168.10.0 0.0.0.31 host 10.0.1.3 eq 22
+
+permit udp 192.168.20.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp 192.168.20.0 0.0.0.31 host 10.0.1.2 eq 67
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.20.0 0.0.0.31 host 10.0.1.3 eq 443
+
+permit udp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 53
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 53
+permit udp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 67
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.3 eq 80
+permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.3 eq 443
+permit udp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 67
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.3 eq 443
+
+
+permit udp 192.168.12.0 0.0.0.15 host 10.0.1.2 eq 53
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.2 eq 53
+permit udp 192.168.12.0 0.0.0.15 host 10.0.1.2 eq 67
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.3 eq 80
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.3 eq 443
+permit udp 192.168.22.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp 192.168.22.0 0.0.0.31 host 10.0.1.2 eq 67
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.3 eq 443
+
+
+
+
+SITEP_FILTER_IN_VLAN12
+
+ip access-list extended SITEP_FILTER_IN_VLAN12
+permit udp 192.168.12.0 0.0.0.15 host 10.0.1.2 eq 53
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.3 eq 80
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.1.3 eq 443
+permit tcp 192.168.12.0 0.0.0.15 host 10.0.3.1 eq 179
+
+
+SITEP_FILTER_OUT_VLAN12
+
+ip access-list extended SITEP_FILTER_OUT_VLAN12
+permit udp host 10.0.1.2 eq 53 192.168.12.0 0.0.0.15
+permit tcp host 10.0.1.2 eq 53 192.168.12.0 0.0.0.15
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.1.3 eq 80 192.168.12.0 0.0.0.15
+permit tcp host 10.0.1.3 eq 443 192.168.12.0 0.0.0.15
+permit tcp host 10.0.3.1 eq 179 192.168.12.0 0.0.0.15
+
+
+SITEP_FILTER_IN_VLAN22
+
+ip access-list extended SITEP_FILTER_IN_VLAN22
+permit udp 192.168.22.0 0.0.0.31 host 10.0.1.2 eq 53
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.2 eq 53
+permit udp any eq 68 any eq 67
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.3 eq 80
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.1.3 eq 443
+permit tcp 192.168.22.0 0.0.0.31 host 10.0.3.1 eq 179
+
+
+SITEP_FILTER_OUT_VLAN22
+
+ip access-list extended SITEP_FILTER_OUT_VLAN22
+permit udp host 10.0.1.2 eq 53 192.168.22.0 0.0.0.31
+permit tcp host 10.0.1.2 eq 53 192.168.22.0 0.0.0.31
+permit udp any eq 67 any eq 68
+permit tcp host 10.0.3.1 eq 80 192.168.22.0 0.0.0.31
+permit tcp host 10.0.3.1 eq 443 192.168.22.0 0.0.0.31
+permit tcp host 10.0.3.1 eq 179 192.168.22.0 0.0.0.31
+
+
+
+—-----------------------------------------------------------------------------
+
+
+show ip access-lists 
+show ip interface
+
+ ip access-group <NOM> <IN/OUT>
+
+
+
+access-list <number or name> <permit|deny> <protocol> <source> <source-wildcard> [source-port] <destination> <destination-wildcard> [destination-port]
+
+
+
+Transfert DHCP :
+Client -> Server 68 -> 67
+Server -> client 67 -> 68 
+
+
+
+conf t
+no ip http server
+no ip http secure-server
+end
+
+Ports Utiliser Dans les ACL : 
+
+Ports 
+80 	http
+546 	UDP (DHCPv6) serveur
+547 	UDP (DHCPv6) client
+67 	UDP (DHCPv4) serveur
+68 	UDP (DHCPv4) client
+53 	UDP (DNS)
+179	TCP (BGP) client
+
+
+Router 1 
+
+ACL : SITE1_FILTER_V6
+ipv6 access-list SITE1_FILTER_V6
+	// Autoriser OSPF
+ permit 89 any any
+// Autoriser DNS pour VLAN 11
+ permit udp 2001:db8:2:11::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:2:11::/64 host 2001:db8:1:1::2 eq 53
+
+//Autoriser DNS pour VLAN 21
+ permit udp 2001:db8:2:21::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:2:21::/64 host 2001:db8:1:1::2 eq 53
+
+// Autoriser DHCPv6 pour VLAN 11
+ permit udp 2001:db8:2:11::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:2:11::/64 eq 546
+
+//Autoriser DHCPv6 pour VLAN 21
+ permit udp 2001:db8:2:21::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:2:21::/64 eq 546
+
+// Autoriser HTTP pour VLAN 11
+permit tcp 2001:db8:2:11::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTP pour VLAN 21
+permit tcp 2001:db8:2:21::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTPS pour VLAN 11
+permit tcp 2001:db8:2:11::/64 host 2001:db8:1:1::3 eq 443
+
+// Autoriser HTTPS pour VLAN 21
+permit tcp 2001:db8:2:21::/64 host 2001:db8:1:1::3 eq 443
+
+
+// Bloquer tout le reste
+ deny ipv6 any any log
+
+
+ACL : SITEP_FILTER_v6
+
+ipv6 access-list SITEP_FILTER_V6
+	// Autoriser OSPF
+ permit 89 any any
+// Autoriser DNS pour VLAN 10
+ permit udp 2001:db8:1:10::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:1:10::/64 host 2001:db8:1:1::2 eq 53
+
+//Autoriser DNS pour VLAN 20
+ permit udp 2001:db8:1:20::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:1:20::/64 host 2001:db8:1:1::2 eq 53
+
+// Autoriser DHCPv6 pour VLAN 10
+ permit udp 2001:db8:1:10::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:1:10::/64 eq 546
+
+//Autoriser DHCPv6 pour VLAN 20
+ permit udp 2001:db8:1:20::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:1:20::/64 eq 546
+
+// Autoriser HTTP pour VLAN 10
+permit tcp 2001:db8:1:10::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTP pour VLAN 20
+permit tcp 2001:db8:1:20::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTPS pour VLAN 10
+permit tcp 2001:db8:1:10::/64 host 2001:db8:1:1::3 eq 443
+
+// Autoriser HTTPS pour VLAN 20
+permit tcp 2001:db8:1:20::/64 host 2001:db8:1:1::3 eq 443
+
+
+// Bloquer tout le reste
+ deny ipv6 any any log
+
+
+ACL : SITE2_FILTER_v6
+
+ipv6 access-list SITEP_FILTER_V6
+	// Autoriser BGP IPv6 
+permit tcp host  2001:db8:1:2::1 host 2001:db8:1:2::2 eq 179
+permit tcp host 2001:db8:1:2::2 host 2001:db8:1:2::1 eq 179
+
+
+// Autoriser DNS pour VLAN 12
+ permit udp 2001:db8:3:12::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:3:12::/64 host 2001:db8:1:1::2 eq 53
+
+//Autoriser DNS pour VLAN 22
+ permit udp 2001:db8:3:22::/64 host 2001:db8:1:1::2 eq 53
+ permit tcp 2001:db8:3:22::/64 host 2001:db8:1:1::2 eq 53
+
+// Autoriser DHCPv6 pour VLAN 12
+ permit udp 2001:db8:3:12::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:3:12::/64 eq 546
+
+//Autoriser DHCPv6 pour VLAN 20
+ permit udp 2001:db8:3:22::/64 host 2001:db8:1:1::2 eq 547
+ permit udp host 2001:db8:1:1::2 2001:db8:3:22::/64 eq 546
+
+// Autoriser HTTP pour VLAN 12
+permit tcp 2001:db8:3:12::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTP pour VLAN 22
+permit tcp 2001:db8:3:22::/64 host 2001:db8:1:1::3 eq 80
+
+// Autoriser HTTPS pour VLAN 12
+permit tcp 2001:db8:3:12::/64 host 2001:db8:1:1::3 eq 443
+
+// Autoriser HTTPS pour VLAN 22
+permit tcp 2001:db8:3:22::/64 host 2001:db8:1:1::3 eq 443
+
+// Bloquer tout le reste
+ deny ipv6 any any log
