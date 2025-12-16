@@ -132,14 +132,50 @@
 	
 	\begin{terminal}{Installation de k3s}
 	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init
+	\end{terminal}
 	
-	# Optional, to access to the cluster remotely
+	\subsection{Accès distant au cluster (Optionnel)}
+	
+	\begin{terminal}{}
 	scp root@<IP_OF_LINUX_MACHINE>:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 	\end{terminal}
 
 	\begin{terminal}{Modifier l'URL du serveur rancher}
 	nano ~/.kube/config
 	\end{terminal}
+	
+	\subsection{Installation d'helm}
+	
+	\begin{terminal}{}
+	sudo apt-get install curl gpg apt-transport-https --yes
+	
+	curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+	
+	echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+	
+	sudo apt-get update
+	sudo apt-get install helm
+	\end{terminal}
+	
+	\subsection{Installation de kubectl}
+	
+	\begin{terminal}{}
+	sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+	
+	curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	
+	sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	
+	echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+	sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+	
+	sudo apt-get update
+	sudo apt-get install -y kubectl
+	\end{terminal}
+	
+	\subsection{Pod K3S}
+	
+	
 	
 	\begin{terminal}{Creation du pod Rancher avec Helm}
 	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
