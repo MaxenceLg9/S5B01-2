@@ -60,10 +60,9 @@
 	stringstyle=\color{red}, % strings
 	showstringspaces=false,
 	numbers=none, % line numbers on the left
-	numberstyle=\tiny\color{gray},
 	backgroundcolor=\color{bggray},
 	breaklines=true,
-	frame=single,
+	frame=none,
 	tabsize=4
 }
 
@@ -73,24 +72,19 @@
     comment=[l]{//},
     morecomment=[s]{/*}{*/},
     morestring=[b]",
-}
-
-\lstset{
-    language=Rust,
     basicstyle=\ttfamily\small,
     keywordstyle=\color{blue},
     commentstyle=\color{gray},
     stringstyle=\color{red},
-    breaklines=true,
-    frame=single
 }
 
 % Define a new environment "varblock" with 1 argument = label
 \newenvironment{terminal}[1]{%
-	\Verbatim[frame=single, numbers=none,label={#1}, breaklines, breakanywhere,tabsize=4]%
+	\Verbatim[frame=none, numbers=none,label={#1}, breaklines, breakanywhere,tabsize=4,breaksymbol=, breakanywheresymbolpre=,backgroundcolor=bggray]%
 }{%
 	\endVerbatim
 }
+
 
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\Alph{section}}
@@ -108,7 +102,7 @@
 \setcounter{secnumdepth}{4}
 \setcounter{tocdepth}{3} 
 
-\title{\Huge{\bfseries S5.B.01 Phase 4\\Déploiement Kubernetes}}
+\title{\Huge{\bfseries S5.B.01 Phase 4\\Déploiement de services}}
 \date{\today}
 \author{Maxence Lagourgue}
 
@@ -117,42 +111,62 @@
 	\maketitle
 	\tableofcontents
 	
+	\chapter{Outils}
+	
+	Dans cette partie, les outils utilisés seront:
+	\begin{itemize}
+	\item Rancher pour la gestion des clusters
+	\item RKE2 pour la mise en œuvre Kubernetes des nœuds de travail
+	\item k3s pour le cluster Rancher
+	\item kubectl pour la gestion des ressources
+	\item Helm pour la gestion des applications
+	\end{itemize}
+
 	\chapter{Création du cluster avec Rancher}
 	
-	\section{Installation de docker}
-	
-	\begin{terminal}{}
-	sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
-	\end{terminal}
-	
-	\begin{terminal}{}
-# Add Docker's official GPG key:
-sudo apt update
-sudo apt install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add the repository to Apt sources:
-sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
-Types: deb
-URIs: https://download.docker.com/linux/debian
-Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
-Components: stable
-Signed-By: /etc/apt/keyrings/docker.asc
-EOF
-
-sudo apt update
-	\end{terminal}
-	
-	\begin{terminal}{}
-	sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-	\end{terminal}
+	Pour utiliser Rancher, plusieurs méthodes d'installation s'offrent à nous.
+	L'une avec docker, l'autre en tant que noeud Kubernetes. 
+	Les 
 	
 	\section{Installation de rancher}
 	
-	\begin{terminal}{}
-	docker run -d --restart=unless-stopped -p 80:80 -p 443:443 --name rancher --privileged rancher/rancher:latest
+	\begin{terminal}{Installation de k3s}
+	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init
+	
+	# Optional, to access to the cluster remotely
+	scp root@<IP_OF_LINUX_MACHINE>:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 	\end{terminal}
+
+	\begin{terminal}{Modifier l'URL du serveur rancher}
+	nano ~/.kube/config
+	\end{terminal}
+	
+	\begin{terminal}{Creation du pod Rancher avec Helm}
+	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+	
+	kubectl create namespace cattle-system
+	
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/<VERSION>/cert-manager.crds.yaml
+	
+	helm repo add jetstack https://charts.jetstack.io
+	
+	helm repo update
+	
+	helm install cert-manager jetstack/cert-manager \
+	  --namespace cert-manager \
+	  --create-namespace
+	  
+	helm install rancher rancher-latest/rancher \
+	  --namespace cattle-system \
+	  --set hostname=<IP_OF_LINUX_NODE>.sslip.io \
+	  --set replicas=1 \
+	  --set bootstrapPassword=<PASSWORD_FOR_RANCHER_ADMIN>
+	\end{terminal}
+	
+	
+	
+	Utilisation de Helm, Kubectl, k3s, RKE2.
+	
+	Faire le gitlab en tant qu'application kubernetes/rancher.
 	
 \end{document}
