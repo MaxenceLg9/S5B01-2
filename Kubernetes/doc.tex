@@ -218,4 +218,21 @@
 	
 	On définit un nouveau mot de passe qui est \verb*|qJHiA@wwaagi46U|.
 	
+	\subsection{Pour arrêter/pauser Rancher}
+	
+	\begin{terminal}{}
+	kubectl scale --replicas=0 deployment/rancher -n cattle-system
+	\end{terminal}
+	
+	Cela permet d'arrêter temporairement le pod Rancher.
+	
+	\section{Réinitialisation du cluster}
+	
+	Pour revenir à l'état 0 du cluster, il est possible de:
+	\begin{terminal}{}
+	rm -rf /var/lib/rancher/k3s/server/db/etcd
+	/usr/local/bin/k3s-killall.sh
+	systemctl restart k3s.service
+	\end{terminal}
+	
 \end{document}
