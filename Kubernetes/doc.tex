@@ -130,6 +130,8 @@
 	L'une avec docker, l'autre en tant que noeud Kubernetes. 
 	Les autres installations reposent sur l'utilisation d'un Cloud Provider ainsi que Terraform donc inutile dans notre cas.
 	
+	Exemple de tutorial: \href{https://blog.stephane-robert.info/docs/conteneurs/orchestrateurs/outils/rancher/}{Tutorial Rancher 2025}
+	
 	Faire le gitlab en tant qu'application kubernetes/rancher.
 	
 	
@@ -187,11 +189,14 @@
 	\begin{terminal}{Creation du pod Rancher avec Helm}
 	export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 	
-	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+
 	
 	kubectl create namespace cattle-system
+	kubectl config set-context --current --namespace=cattle-system
 	
 	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.crds.yaml
+	
+	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 	
 	helm repo add jetstack https://charts.jetstack.io
 	
