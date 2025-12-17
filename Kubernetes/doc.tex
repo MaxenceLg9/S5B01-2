@@ -111,7 +111,9 @@
 	\maketitle
 	\tableofcontents
 	
-	\chapter{Outils}
+	\chapter{Introduction}
+	
+	\section{Outils}
 	
 	Dans cette partie, les outils utilisés seront:
 	\begin{itemize}
@@ -123,8 +125,19 @@
 	\end{itemize}
 	
 	Plus tard, si nous avons le temps, nous utiliserons Ansible pour automiser la chaîne de production Rancher.
+	
+	\section{Machines}
+	
+	Les machines utilisées au cours de ce projet seront:
+	
+	\begin{itemize}
+	\item K8SA2 (k8s1) $\Longrightarrow$ k3s cluster + Rancher Server
+	\item K8SB2 (k8s2) $\Longrightarrow$ RKE2 cluster + Master, Etcd, Worker Nodes
+	\item K8SC2 (k8s3) $\Longrightarrow$ RKE2 cluster + Worker nodes + Backup
+	\end{itemize}
+	
 
-	\chapter{Création du cluster avec Rancher}
+	\chapter{Installation de Rancher dans un cluster k3s}
 	
 	Pour utiliser Rancher, plusieurs méthodes d'installation s'offrent à nous.
 	L'une avec docker, l'autre en tant que noeud Kubernetes. 
@@ -135,7 +148,7 @@
 	Faire le gitlab en tant qu'application kubernetes/rancher.
 	
 	
-	\section{Installation de rancher}
+	\section{Installation de k3s}
 	
 	\begin{terminal}{Installation de k3s}
 	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init
@@ -182,7 +195,7 @@
 	sudo apt-get install -y kubectl
 	\end{terminal}
 	
-	\subsection{Pod K3S}
+	\subsection{Création d'un Déploiement Rancher}
 	
 	<Hostname> correspond au nom de domaine utilisé pour contacter le pod rancher.
 	
@@ -238,6 +251,16 @@
 	rm -rf /var/lib/rancher/k3s/server/db/etcd
 	/usr/local/bin/k3s-killall.sh
 	systemctl restart k3s.service
+	\end{terminal}
+	
+	\chapter{Création d'un cluster}
+	
+	\section{Enrôlement de machines}
+	
+	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
+	
+	\begin{terminal}{}
+	curl --insecure -fL https://10.0.1.3.sslip.io/system-agent-install.sh | sudo  sh -s - --server https://10.0.1.3.sslip.io --label 'cattle.io/os=linux' --token wq74n2j9rxj2th5t6xjf5b8dnjkrn6bbss6brnnzxx6tvwkj5m7xbg --ca-checksum 60da38d3a88ecb90961987a65f52b63d1ee2aa62b2e0ab6d4710ba1ba00b6ded --etcd --controlplane --worker --internal-address 10.0.1.4,2001:db8:1:1::4 --node-name Main
 	\end{terminal}
 	
 \end{document}
