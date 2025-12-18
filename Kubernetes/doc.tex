@@ -9,6 +9,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{babel}
+\usepackage{stix}
 \usepackage{minted}
 \usepackage{fontspec}
 \usepackage{tcolorbox}
@@ -60,6 +61,7 @@
 	stringstyle=\color{red}, % strings
 	showstringspaces=false,
 	numbers=none, % line numbers on the left
+	numberstyle=\tiny\color{gray},
 	backgroundcolor=\color{bggray},
 	breaklines=true,
 	frame=none,
@@ -78,13 +80,11 @@
     stringstyle=\color{red},
 }
 
-% Define a new environment "varblock" with 1 argument = label
 \newenvironment{terminal}[1]{%
 	\Verbatim[frame=none, numbers=none,label={#1}, breaklines, breakanywhere,tabsize=4,breaksymbol=, breakanywheresymbolpre=,backgroundcolor=bggray]%
 }{%
 	\endVerbatim
 }
-
 
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\Alph{section}}
@@ -260,7 +260,13 @@
 	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
 	
 	\begin{terminal}{}
-	curl --insecure -fL https://10.0.1.3.sslip.io/system-agent-install.sh | sudo  sh -s - --server https://10.0.1.3.sslip.io --label 'cattle.io/os=linux' --token wq74n2j9rxj2th5t6xjf5b8dnjkrn6bbss6brnnzxx6tvwkj5m7xbg --ca-checksum 60da38d3a88ecb90961987a65f52b63d1ee2aa62b2e0ab6d4710ba1ba00b6ded --etcd --controlplane --worker --internal-address 10.0.1.4,2001:db8:1:1::4 --node-name Main
+	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
+	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
+	export PATH=$PATH:/var/lib/rancher/rke2/bin
+	
+	curl --insecure -fL https://10.0.1.3.sslip.io/system-agent-install.sh | sudo  sh -s - --server https://10.0.1.3.sslip.io --label 'cattle.io/os=linux' --token 4r4dj8zx5fx4q9lbfpr94t8msr6zwmnx4hpdg5x2ns7ccqm2qxgjh6 --ca-checksum 60da38d3a88ecb90961987a65f52b63d1ee2aa62b2e0ab6d4710ba1ba00b6ded --etcd --controlplane --worker --internal-address 10.0.0.4,2001:db8:1:1::4 --node-name k8s2
 	\end{terminal}
+	
+	
 	
 \end{document}
