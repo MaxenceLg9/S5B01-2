@@ -9,6 +9,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{babel}
+\usepackage{stix}
 \usepackage{minted}
 \usepackage{fontspec}
 \usepackage{tcolorbox}
@@ -60,6 +61,7 @@
 	stringstyle=\color{red}, % strings
 	showstringspaces=false,
 	numbers=none, % line numbers on the left
+	numberstyle=\tiny\color{gray},
 	backgroundcolor=\color{bggray},
 	breaklines=true,
 	frame=none,
@@ -78,13 +80,11 @@
     stringstyle=\color{red},
 }
 
-% Define a new environment "varblock" with 1 argument = label
 \newenvironment{terminal}[1]{%
 	\Verbatim[frame=none, numbers=none,label={#1}, breaklines, breakanywhere,tabsize=4,breaksymbol=, breakanywheresymbolpre=,backgroundcolor=bggray]%
 }{%
 	\endVerbatim
 }
-
 
 \renewcommand{\thechapter}{\Roman{chapter}}
 \renewcommand{\thesection}{\thechapter.\Alph{section}}
@@ -111,7 +111,9 @@
 	\maketitle
 	\tableofcontents
 	
-	\chapter{Outils}
+	\chapter{Introduction}
+	
+	\section{Outils}
 	
 	Dans cette partie, les outils utilisés seront:
 	\begin{itemize}
@@ -121,19 +123,42 @@
 	\item kubectl pour la gestion des ressources
 	\item Helm pour la gestion des applications
 	\end{itemize}
+	
+	Plus tard, si nous avons le temps, nous utiliserons Ansible pour automiser la chaîne de production Rancher.
+	
+	\section{Machines}
+	
+	Les machines utilisées au cours de ce projet seront:
+	
+	\begin{itemize}
+	\item K8SA2 (k8s1) $\Longrightarrow$ k3s cluster + Rancher Server
+	\item K8SB2 (k8s2) $\Longrightarrow$ RKE2 cluster + Master, Etcd, Worker Nodes
+	\item K8SC2 (k8s3) $\Longrightarrow$ RKE2 cluster + Worker nodes + Backup
+	\end{itemize}
+	
 
-	\chapter{Création du cluster avec Rancher}
+	\chapter{Installation de Rancher dans un cluster k3s}
 	
 	Pour utiliser Rancher, plusieurs méthodes d'installation s'offrent à nous.
 	L'une avec docker, l'autre en tant que noeud Kubernetes. 
-	Les 
+	Les autres installations reposent sur l'utilisation d'un Cloud Provider ainsi que Terraform donc inutile dans notre cas.
 	
-	\section{Installation de rancher}
+	Exemple de tutorial: \href{https://blog.stephane-robert.info/docs/conteneurs/orchestrateurs/outils/rancher/}{Tutorial Rancher 2025}
+	
+	Faire le gitlab en tant qu'application kubernetes/rancher.
+	
+	
+	\section{Installation de k3s}
 	
 	\begin{terminal}{Installation de k3s}
 	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init
+	\end{terminal}
 	
-	# Optional, to access to the cluster remotely
+	\subsection{Accès distant au cluster (Optionnel)}
+	
+	\verb*|<IP_OF_LINUX_MACHINE>| est l'IP de la machine distante sur laquelle se trouve le cluster.
+	
+	\begin{terminal}{}
 	scp root@<IP_OF_LINUX_MACHINE>:/etc/rancher/k3s/k3s.yaml ~/.kube/config
 	\end{terminal}
 
@@ -141,12 +166,50 @@
 	nano ~/.kube/config
 	\end{terminal}
 	
+	\subsection{Installation d'helm}
+	
+	\begin{terminal}{}
+	sudo apt-get install curl gpg apt-transport-https --yes
+	
+	curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+	
+	echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+	
+	sudo apt-get update
+	sudo apt-get install helm
+	\end{terminal}
+	
+	\subsection{Installation de kubectl}
+	
+	\begin{terminal}{}
+	sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+	
+	curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.34/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	
+	sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+	
+	echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.34/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+	sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+	
+	sudo apt-get update
+	sudo apt-get install -y kubectl
+	\end{terminal}
+	
+	\subsection{Création d'un Déploiement Rancher}
+	
+	<Hostname> correspond au nom de domaine utilisé pour contacter le pod rancher.
+	
 	\begin{terminal}{Creation du pod Rancher avec Helm}
-	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+	export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+	
+
 	
 	kubectl create namespace cattle-system
+	kubectl config set-context --current --namespace=cattle-system
 	
-	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/<VERSION>/cert-manager.crds.yaml
+	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.crds.yaml
+	
+	helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
 	
 	helm repo add jetstack https://charts.jetstack.io
 	
@@ -158,15 +221,50 @@
 	  
 	helm install rancher rancher-latest/rancher \
 	  --namespace cattle-system \
-	  --set hostname=<IP_OF_LINUX_NODE>.sslip.io \
+	  --set hostname=10.0.1.3.sslip.io \
 	  --set replicas=1 \
-	  --set bootstrapPassword=<PASSWORD_FOR_RANCHER_ADMIN>
+	  --set bootstrapPassword=$iutinfo
 	\end{terminal}
 	
+	Il faut maintenant attendre car l'installation nécessite quelques minutes.
+	On peut vérifier avec \verb*|kubectl get pods -n cattle-system|
 	
+	Une fois fait, on se connecte à la page et on récupère le mot de passe:
+	\begin{terminal}{}
+	kubectl get secret --namespace cattle-system bootstrap-secret -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
+	\end{terminal}
 	
-	Utilisation de Helm, Kubectl, k3s, RKE2.
+	On définit un nouveau mot de passe qui est \verb*|qJHiA@wwaagi46U|.
 	
-	Faire le gitlab en tant qu'application kubernetes/rancher.
+	\subsection{Pour arrêter/pauser Rancher}
+	
+	\begin{terminal}{}
+	kubectl scale --replicas=0 deployment/rancher -n cattle-system
+	\end{terminal}
+	
+	Cela permet d'arrêter temporairement le pod Rancher.
+	
+	\section{Réinitialisation du cluster}
+	
+	Pour revenir à l'état 0 du cluster, il est possible de:
+	\begin{terminal}{}
+	rm -rf /var/lib/rancher/k3s/server/db/etcd
+	/usr/local/bin/k3s-killall.sh
+	systemctl restart k3s.service
+	\end{terminal}
+	
+	\chapter{Création d'un cluster}
+	
+	\section{Enrôlement de machines}
+	
+	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
+	
+	\begin{terminal}{}
+	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
+	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
+	export PATH=$PATH:/var/lib/rancher/rke2/bin
+	
+	curl --insecure -fL https://10.0.1.3.sslip.io/system-agent-install.sh | sudo  sh -s - --server https://10.0.1.3.sslip.io --label 'cattle.io/os=linux' --token 4r4dj8zx5fx4q9lbfpr94t8msr6zwmnx4hpdg5x2ns7ccqm2qxgjh6 --ca-checksum 60da38d3a88ecb90961987a65f52b63d1ee2aa62b2e0ab6d4710ba1ba00b6ded --etcd --controlplane --worker --internal-address 10.0.0.4,2001:db8:1:1::4 --node-name k8s2
+	\end{terminal}
 	
 \end{document}
