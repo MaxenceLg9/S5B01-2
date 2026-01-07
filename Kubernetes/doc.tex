@@ -131,10 +131,27 @@
 	Les machines utilisées au cours de ce projet seront:
 	
 	\begin{itemize}
-	\item K8SA2 (k8s1) $\Longrightarrow$ k3s cluster + Rancher Server
-	\item K8SB2 (k8s2) $\Longrightarrow$ RKE2 cluster + Master, Etcd, Worker Nodes
-	\item K8SC2 (k8s3) $\Longrightarrow$ RKE2 cluster + Worker nodes + Backup
+	\item applicatif $\Longrightarrow$ k3s cluster + Rancher Server
+	\item K8SA2 (k8s1) $\Longrightarrow$ RKE2 cluster + Master, Etcd, Worker Nodes
+	\item K8SB2 (k8s2) $\Longrightarrow$ RKE2 cluster + Worker nodes + Backup
+	\item K8SC2 (k8s3) $\Longrightarrow$ ???
 	\end{itemize}
+	
+	\section{Configuration générale}
+	
+	Dans toutes les VMs impliquées dans le cluster Kubernetes, la configuration suivante sera définie.
+	
+	\begin{lstlisting}[language=Bash,caption={/etc/hosts}]
+	10.0.1.3        rancher.rancher
+	10.0.1.4        master.rancher
+	10.0.1.5        worker.rancher
+	\end{lstlisting}
+	
+	Pour monitorer les ressources des VMs, nous ne pouvons pas nous servir des indications données par Proxmox VM car le Guest Agent est désactivé. Nous aurons donc de mauvaises indications pour la RAM par exemple. Je conseille donc:
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	wget https://github.com/fastfetch-cli/fastfetch/releases/download/2.56.1/fastfetch-linux-amd64.deb && dpkg -i fastfetch-linux-amd64.deb
+	\end{lstlisting}
 	
 
 	\chapter{Installation de Rancher dans un cluster k3s}
@@ -151,7 +168,7 @@
 	\section{Installation de k3s}
 	
 	\begin{terminal}{Installation de k3s}
-	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init
+	curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.24.10+k3s1" sh -s - server --cluster-init --bind-address 10.0.1.3
 	\end{terminal}
 	
 	\subsection{Accès distant au cluster (Optionnel)}
@@ -204,8 +221,8 @@
 	
 
 	
-	kubectl create namespace cattle-system
-	kubectl config set-context --current --namespace=cattle-system
+	kubectl create namespace cattle-system 
+	kubectl config set-context --current --namespace=cattle-system 
 	
 	kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.crds.yaml
 	
@@ -221,9 +238,9 @@
 	  
 	helm install rancher rancher-latest/rancher \
 	  --namespace cattle-system \
-	  --set hostname=10.0.1.3.sslip.io \
+	  --set hostname=rancher.rancher \
 	  --set replicas=1 \
-	  --set bootstrapPassword=$iutinfo
+	  --set bootstrapPassword=testpassword
 	\end{terminal}
 	
 	Il faut maintenant attendre car l'installation nécessite quelques minutes.
@@ -259,12 +276,36 @@
 	
 	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
 	
-	\begin{terminal}{}
+	\begin{lstlisting}[language=Bash,caption={Machine master}]
 	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
 	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
 	export PATH=$PATH:/var/lib/rancher/rke2/bin
+	export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
 	
-	curl --insecure -fL https://10.0.1.3.sslip.io/system-agent-install.sh | sudo  sh -s - --server https://10.0.1.3.sslip.io --label 'cattle.io/os=linux' --token 4r4dj8zx5fx4q9lbfpr94t8msr6zwmnx4hpdg5x2ns7ccqm2qxgjh6 --ca-checksum 60da38d3a88ecb90961987a65f52b63d1ee2aa62b2e0ab6d4710ba1ba00b6ded --etcd --controlplane --worker --internal-address 10.0.0.4,2001:db8:1:1::4 --node-name k8s2
-	\end{terminal}
+	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --etcd --controlplane --worker --address 10.0.1.4 --internal-address 10.0.1.4
+	\end{lstlisting}
+	
+	\begin{lstlisting}[language=Bash,caption={Machine worker}]
+	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
+	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
+	export PATH=$PATH:/var/lib/rancher/rke2/bin
+	export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
+	
+	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --worker --address 10.0.1.5 --internal-address 10.0.1.5
+	\end{lstlisting}
+	
+	Si DNS issue:
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	export KUBE_EDITOR="nano"
+	kubectl edit configmap rke2-coredns-rke2-coredns -n kube-system
+	
+	hosts {
+		10.0.1.3 rancher.rancher
+		fallthrough
+	}
+	
+	kubectl rollout restart deployment rke2-coredns-rke2-coredns -n kube-system
+	\end{lstlisting}
 	
 \end{document}
