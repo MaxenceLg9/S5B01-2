@@ -1,0 +1,91 @@
+= Documentation de la conteneurisation - Nailloux‑club
+== Introduction
+
+Cette documentation explique la conteneurisation de l’application **Nailloux‑club** avec Docker et Docker Compose, ainsi que les étapes pour la lancer en local.
+
+== Dockerfile
+
+Le fichier `Dockerfile` définit l’image Docker pour PHP 8.1 sous Apache :
+
+* `FROM php:8.1-apache`  
+  Utilise l’image officielle PHP 8.1 avec Apache.
+
+* `RUN apt-get update && apt-get install -y ...`  
+  Installe les dépendances requises :
+  - Extensions PHP : `pdo_mysql`, `gd`, `exif`  
+  - `python3` pour certains traitements
+
+* `RUN apt-get install -y python3-pil`  
+  Installe Pillow via le package Debian pour la gestion d’images.
+
+* Configuration d’Apache  
+  Copie des sources, ajustement des permissions et personnalisation du serveur.
+
+== docker-compose.yml
+
+Le fichier `docker-compose.yml` orchestre les services de l’application.
+
+=== Services
+
+* `app`  
+  - Construit à partir du `Dockerfile`  
+  - Expose le port `8080`  
+  - Monte le code source local
+
+* `db`  
+  - Basé sur `mysql:8.0`  
+  - Initialise la base avec `nailloux.sql`  
+  - Monte un volume pour la persistance des données
+
+=== Réseau
+
+* `nailloux-network`  
+  Réseau de type bridge pour la communication entre `app` et `db`.
+
+=== Volumes
+
+* `dbdata`  
+  Persistance des données MySQL  
+* `./upload` et `./nailloux.sql`  
+  Dossier d’uploads et script d’initialisation de la base
+
+== Instructions d’utilisation
+
+=== Prérequis
+
+* Docker et Docker Compose installés  
+* Dépôt Git cloné
+
+=== Étapes
+
+1. Cloner le projet  
+   [source,bash]  
+   ----  
+   git clone <url_du_repo>  
+   cd Nailloux‑club  
+   ----
+
+2. Construire et démarrer les services  
+   [source,bash]  
+   ----  
+   docker compose up --build -d  
+   ----
+
+3. Vérifier le statut des conteneurs  
+   [source,bash]  
+   ----  
+   docker compose ps  
+   ----
+
+4. Accéder à l’application  
+   Ouvrir `http://localhost:8080` dans votre navigateur.
+
+5. Arrêter et supprimer les conteneurs  
+   [source,bash]  
+   ----  
+   docker compose down  
+   ----
+
+== Conclusion
+
+Votre application **Nailloux‑club** est désormais conteneurisée et prête à fonctionner dans un environnement isolé.
