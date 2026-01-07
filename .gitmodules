@@ -1,3 +1,0 @@
-[submodule "Site"]
-	path = Docker/Site
-	url = https://github.com/AL-NAAIMI/nailloux-docker.git
