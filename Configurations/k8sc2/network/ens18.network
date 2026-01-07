@@ -1,0 +1,13 @@
+[Match]
+Name=ens18
+
+[Network]
+DHCP=yes
+UseGateway=yes
+
+[DHCPv4]
+ClientIdentifier=mac
+UseDNS=yes
+
+[DHCPv6]
+ClientIdentifier=mac

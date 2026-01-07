@@ -1,0 +1,8 @@
+#!/bin/bash
+
+scp -r etu@10.0.1.2:/etc/systemd/network/ Applicatif/
+scp -r etu@10.0.1.3:/etc/systemd/network/ Reseau/
+scp -r etu@10.0.1.4:/etc/systemd/network/ k8sa2/
+scp -r etu@10.0.1.5:/etc/systemd/network/ k8sb2/
+scp -r etu@10.0.1.6:/etc/systemd/network/ k8sc2/
+scp -r etu@10.0.1.10:/etc/systemd/network/ Backup/

@@ -1,0 +1,16 @@
+[Match]
+Name=ens19
+
+[Network]
+Address=10.0.1.6/28
+Address=2001:db8:10::6/124
+DHCP=ipv4
+
+[DHCPv4]
+UseGateway=no
+UseRoutes=no
+UseDNS=yes
+
+[DHCPv6]
+UseGateway=no
+UseRoutes=no

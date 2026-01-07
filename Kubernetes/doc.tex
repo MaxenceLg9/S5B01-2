@@ -212,6 +212,16 @@
 	sudo apt-get install -y kubectl
 	\end{terminal}
 	
+	\subsection{Installation de Calicoctl}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	curl -L https://github.com/projectcalico/calico/releases/download/v3.31.3/calicoctl-linux-amd64 -o calicoctl
+	
+	chmod +x ./calicoctl
+	
+	mv ./calicoctl /usr/bin/calicoctl
+	\end{lstlisting}
+	
 	\subsection{Création d'un Déploiement Rancher}
 	
 	<Hostname> correspond au nom de domaine utilisé pour contacter le pod rancher.
@@ -284,6 +294,13 @@
 	
 	\section{Enrôlement de machines}
 	
+	\begin{lstlisting}[language=Bash,caption={}]
+	echo "CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
+		CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
+		PATH=$PATH:/var/lib/rancher/rke2/bin
+		KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> /etc/environnment
+	\end{lstlisting}
+	
 	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
 	
 	\begin{lstlisting}[language=Bash,caption={Machine master}]
@@ -296,32 +313,256 @@
 	\end{lstlisting}
 	
 	\begin{lstlisting}[language=Bash,caption={Machine worker}]
-	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
-	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
-	export PATH=$PATH:/var/lib/rancher/rke2/bin
-	export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-	
 	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --worker --address 10.0.1.5 --internal-address 10.0.1.5
 	\end{lstlisting}
 	
 	Si DNS issue:
 	
 	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl -n cattle-system logs -l app=cattle-cluster-agent
+	
 	export KUBE_EDITOR="nano"
 	kubectl edit configmap rke2-coredns-rke2-coredns -n kube-system
 	
-	hosts {
-		10.0.1.3 rancher.rancher
-		fallthrough
-	}
+  Corefile: |-
+    .:53 {
+        errors
+        health {
+            lameduck 10s
+        }
+        ready
+        kubernetes  cluster.local  cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        hosts {
+            10.0.1.3 rancher.rancher
+            fallthrough
+        }
+        prometheus  0.0.0.0:9153
+        forward  . /run/systemd/resolve/resolv.conf
+        cache  30
+        loop
+        reload
+        loadbalance
+    }
+
 	
 	kubectl rollout restart deployment rke2-coredns-rke2-coredns -n kube-system
+	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=0
+	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=1
 	\end{lstlisting}
 	
 	\chapter{Creation d'un Workload}
 	
 	Tout d'abord, avant de déployer quoi que ce soit il faut convertir le docker-compose.yml en fichier de déploiement Kubernetes, un manifest.
 	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+	
+	kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+	\end{lstlisting}	
 
+
+	\chapter{Cluster components}
+	
+	\section{Gitlab}
+	
+	\subsection{Phase 1: Create the Storage (The Foundation)}
+	
+	Dans la continuité des volumes docker, il existe ce qu'on appelle les \textbf{Persistent Volume Claims}.
+	\begin{itemize}
+	\item gitlab-etc	2Gi	/etc/gitlab	Configuration (gitlab.rb)
+	\item gitlab-opt	20Gi+	/var/opt/gitlab	Database and Git Repositories
+	\item gitlab-log	5Gi	/var/log/gitlab	Logs
+	\end{itemize}
+		
+	\subsection{Phase 2: Create the ConfigMap}
+	
+	Pour définir le nom de domaine qu'on va utiliser pour accéder au serveur Gitlab, on créé une \textbf{ConfigMap} avec la procédure suivante:
+	
+	Dans Rancher: Cluster $\rightarrow$ Resources $\rightarrow$ ConfigMaps.
+	
+	    Create a new one named gitlab-config.
+	
+	    Key: gitlab.rb
+	
+	    Value (Paste this):
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	external_url 'http://nailloux.gitlab.com'
+	gitlab_rails['time_zone'] = 'Europe/Paris'
+	\end{lstlisting}
+	
+
+	
+	\subsection{Phase 3: Deploy GitLab (The Workload)}
+	
+	Create a Deployment with the following specific settings.
+	\subsubsection{Basic Info}
+	
+	    Name: gitlab
+	
+	    Docker Image: gitlab/gitlab-ce:latest
+	
+	\subsubsection{Networking (Ports)}
+	
+	Add these "Service" ports:
+	
+	    HTTP: Port 80 (mapped to 80 in container)
+	
+	    SSH: Port 2222 (mapped to 22 in container) — Note: We use 2222 because 22 is usually taken by your actual Node.
+	
+	\subsubsection{Storage (Volume Mounts)}
+	
+	Mount your PVCs and the ConfigMap:
+	
+	    PVC gitlab-etc → /etc/gitlab
+	
+	    PVC gitlab-opt → /var/opt/gitlab
+	
+	    PVC gitlab-log → /var/log/gitlab
+	
+	    ConfigMap gitlab-config → Key gitlab.rb mounted to /etc/gitlab/gitlab.rb
+	
+	\subsubsection{Security Context (CRITICAL)}
+	
+	As we discovered, GitLab needs permissions to fix the folders created by local-path.
+	
+	    Privileged: True
+	
+	    Run as User: 0 (Root)
+	
+	\subsection{Phase 4: Handle the "Wait"}
+	
+	GitLab takes 5 to 10 minutes to start the first time.
+	
+	    Do not add Health Checks yet. If you add a "Liveness Probe" now, Kubernetes will see the app isn't responding (because it's still installing) and kill it, creating a "CrashLoopBackOff."
+	
+	    Monitor the logs: ```bash kubectl logs -f deployment/gitlab
+	
+	    Wait until you see the "GitLab Reconfigured!" message and the internal Nginx starts.
+	
+	\subsection{Phase 5: Accessing GitLab (The Ingress)}
+	
+	Once the logs show GitLab is up, you need to route traffic from your 10.x or 100.x IP to the pod.
+	
+	    Go to Service Discovery > Ingresses.
+	
+	    Create a new Ingress.
+	
+	    Host: git.yourdomain.com
+	
+	    Path: / → Service: gitlab → Port: 80.
+	
+	\subsection{Phase 6: Get your Password}
+	
+	Once the site loads, you need the initial root password.
+	
+	    Use the Rancher "Execute Shell" on the GitLab pod.
+	
+	 \begin{lstlisting}[language=,caption={}]
+	 root@k8sc2:~# kubectl get pods
+	 NAME                      READY   STATUS    RESTARTS   AGE
+	 gitlab-54d7466479-vcd9w   1/1     Running   0          18m
+	 root@k8sc2:~# kubectl exec gitlab-54d7466479-vcd9w -- cat /etc/gitlab/initial_root_password
+	 # WARNING: This password is only valid if ALL of the following are true:
+	 #          • You set it manually via the GITLAB_ROOT_PASSWORD environment variable
+	 #            OR the gitlab_rails['initial_root_password'] setting in /etc/gitlab/gitlab.rb
+	 #          • You set it BEFORE the initial database setup (typically during first installation)
+	 #          • You have NOT changed the password since then (via web UI or command line)
+	 #
+	 #          If this password doesn't work, reset the admin password using:
+	 #          https://docs.gitlab.com/security/reset_user_password/#reset-the-root-password
+	 
+	 Password: fU16xdsVRA/de4Mf/N2geVuifm8kDIqJkeB3zQVnwcE=
+	 
+	 # NOTE: This file is automatically deleted after 24 hours on the next reconfigure run.
+	 \end{lstlisting}
+	 
+	 Pour interagir avec le pod:
+	 \begin{lstlisting}[language=Bash,caption={}]
+	 kubectl exec -it gitlab-54d7466479-vcd9w -- bash
+	 \end{lstlisting}
+	
+	\section{Docker Registry}
+	
+	Le serveur gitlab possède déjà une option pour disposer d'un serveur Docker Registry mais on ne va pas utiliser cette méthode ici.
+	
+	\subsection{Phase 1: Create Storage for your Images}
+	
+	Docker images take up a lot of space. You need a persistent place to store them so they don't disappear when the pod restarts.
+	
+	    Go to Storage > PersistentVolumeClaims.
+	
+	    Create a PVC named registry-data.
+	
+	    Size: At least 20Gi (depending on how many images you plan to store).
+	
+	    Storage Class: local-path.
+	
+	\subsection{Phase 2: Deploy the Registry Workload}
+	
+	    Go to Workload > Deployments and click Create.
+	
+	    Name: docker-registry.
+	
+	    Image: registry:2.
+	
+	    Storage:
+	
+	        Mount the PVC registry-data to /var/lib/registry.
+	
+	    Environment Variables:
+	\begin{lstlisting}[language=Bash,caption={}]
+	REGISTRY_HTTP_ADDR: :0.0.0.0:5000 (The internal port).
+	
+	REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry.
+	\end{lstlisting}
+
+	        
+	    Expose: ClusterIP, https, 5000, tcp
+	
+	\subsection{Phase 3: Expose it (The SSL Problem)}
+	
+	Docker refuses to push or pull from a registry over plain HTTP unless you configure every single node as an "insecure registry." It is much easier to set up an Ingress with SSL.
+	
+	    Generate a Certificate: Since you are in a private network, you can use a "Secret" to store a self-signed cert, or use Cert-Manager if you have it.
+	    
+	  	Dans la section Secret: Create > TLS Certificate et il suffit de renseigner la clé privée et publique
+	
+	    Create Ingress:
+	
+	        Host: registry.rancher (or whatever your DNS handles).
+	
+	        Service: docker-registry on Port 5000.
+	
+	        Protocol: HTTPS.
+	        
+	
+	\subsection{Phase 4: Testing the Registry}
+	
+	From your development machine (where you build your Dockerfiles):
+	
+	    Tag your image: docker tag nailloux-app:v1 registry.rancher/nailloux-app:v1
+	
+	    Push it: docker push registry.rancher/nailloux-app:v1
+	
+	
+	\chapter{Troubleshooting}
+	
+	\section{DNS}
+	
+	Lorsqu'on utilise systemd-resolved, le fichier /etc/resolv.conf utilise une adresse locale inutilisable par le pod \textbf{coreDNS}. Il faut donc spécifier le fichier où systemd-resolved garde ses serveurs DNS.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	 nano /etc/rancher/rke2/config.yaml
+	root@k8sc2:~# echo 'services:
+	  kubelet:
+	    extra_args:
+	      resolv-conf: "/run/resolvconf/resolv.conf"' > /etc/rancher/rke2/config.yaml
+	\end{lstlisting}
+	
 	
 \end{document}
