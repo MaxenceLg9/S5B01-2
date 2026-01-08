@@ -1,0 +1,199 @@
+\documentclass{report}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage[french]{babel}
+\usepackage{titlesec}
+\usepackage[a4paper]{geometry}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{babel}
+\usepackage{stix}
+\usepackage{minted}
+\usepackage{fontspec}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+\usepackage{titling}
+\usepackage{enumitem}
+\usepackage{fancyvrb}
+\usepackage{tikz}
+\usepackage{changepage}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{amsmath, amssymb}
+
+\setmainfont{Calibri}
+
+
+
+\setlist[itemize]{label=\large\textbullet}
+
+
+\definecolor{azure}{rgb}{0.2, 0.7, 1.0}
+\definecolor{bggray}{gray}{0.95}
+
+\setlength{\parindent}{0pt}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=purple,
+	filecolor=magenta,      
+	urlcolor=blue,
+	pdfborder={0 0 1}
+}
+
+\titleformat{\chapter}[block]
+{\normalfont\LARGE\bfseries} % Style: large bold text
+{\thechapter}                % Keep chapter number (remove if unwanted)
+{1em}                        % Spacing between number and title
+{}     
+
+\urlstyle{same}
+
+\geometry{width=18cm}
+\geometry{a4paper}
+
+\lstset{
+	basicstyle=\ttfamily\small, % typewriter font
+	keywordstyle=\color{blue}\bfseries, % keywords
+	commentstyle=\color{green!50!black}\itshape, % comments
+	stringstyle=\color{red}, % strings
+	showstringspaces=false,
+	numbers=none, % line numbers on the left
+	numberstyle=\tiny\color{gray},
+	backgroundcolor=\color{bggray},
+	breaklines=true,
+	frame=none,
+	tabsize=4
+}
+
+\lstdefinelanguage{Rust}{
+    keywords={fn, let, mut, if, else, match, impl, struct, enum, use, pub},
+    sensitive=true,
+    comment=[l]{//},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]",
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+}
+
+\newenvironment{terminal}[1]{%
+	\Verbatim[frame=none, numbers=none,label={#1}, breaklines, breakanywhere,tabsize=4,breaksymbol=, breakanywheresymbolpre=,backgroundcolor=bggray]%
+}{%
+	\endVerbatim
+}
+
+\renewcommand{\thechapter}{\Roman{chapter}}
+\renewcommand{\thesection}{\thechapter.\Alph{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\alph{subsubsection}}
+
+
+\pretitle{%
+	\begin{center}
+		\LARGE
+		\includegraphics[width=6cm,height=2cm]{../../../../../../Format/logo-UT-site.png}\\[\bigskipamount]
+	}
+	\posttitle{\end{center}}
+
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3} 
+
+\title{\Huge{\bfseries S5.B.01 Phase 4\\Configurations Réseaux - Processus}}
+\date{\today}
+\author{Maxence Lagourgue}
+
+\begin{document}
+	
+	\maketitle
+	\tableofcontents
+	
+	\chapter{Introduction}
+	
+	Ce document a pour vocation d'exposer tous les artéfacts créés / utilisés pour optimiser les processus de configurations dans le cadre de cette SAE.
+	
+	\chapter{VMs}
+	
+	Dans cette section, nous évoquerons les outils utilisés pour faciliter la définition des configurations des interfaces réseaux notamment, ainsi que le déploiement du Site Web et des Clusters Kubernetes (RKE2 / k3s).
+	
+	\section{Configurations Interfaces Réseaux}
+	
+	Pour cette partie, seront détayés les différentes étapes afin de récupérer et d'envoyer les fichiers *.network pour les interfaces réseaux au travers de ssh via sa sous-commande scp.
+	
+	\subsection{Création d'un utilisateur qui aura la propriété des fichiers}
+	
+	Pour plus de sécurité, nous n'utiliserons par l'utilisateur root avec une clé ssh mais un utilisateur spécial qui aura le droit de lecture seulement sur /etc/systemd/network, et sur tous les dossiers nécessitant un accès spécial dont nous voulons récupérer et définir la configuration.
+	
+	Cet utilisateur se nommera:  sisyphe.
+	
+	On réalise cette manipulation avec:
+	\begin{lstlisting}[language=Bash,caption={}]
+	useradd -m sisyphe
+	passwd sisyphe
+	chown sisyphe:sisyphe -R /etc/systemd/network/
+	\end{lstlisting}
+	
+	Si comme moi, vous avez oublié l'option \textbf{-m} pour créer le répertoire 
+	utilisateur dans /home, vous pouvez exécuter la commande suivante.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	install -d -m 0700 -o sisyphe -g sisyphe /home/sisyphe
+	\end{lstlisting}
+	
+	\subsection{Définition d'une clé SSH }
+	
+	Maintenant, donc devons donc générer une clé SSH pour pouvoir par la suite activer la connexion sans mot de passe.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	ssh-keygen -f sisyphe_key
+	\end{lstlisting}
+	
+	\subsection{Liaison de la clé SSH au compte sisyphe}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	ssh-copy-id -i sisyphe_key.pub sisyphe@10.0.1.3
+	\end{lstlisting}
+	
+	\subsection{Fichier exécutable pour automiser le processus}
+	
+	Maintenant, nous allons créer deux fichiers, l'un pour récupérer les fichiers distants, l'un pour les envoyer.
+	
+	\begin{lstlisting}[language=Bash,caption={get-config}]
+	#!/bin/bash
+	
+	scp -v -i ./sisyphe_key sisyphe@10.0.1.2:/etc/systemd/network/* Reseau/
+	scp -i ./sisyphe_key sisyphe@10.0.1.3:/etc/systemd/network/* Applicatif/
+	scp -i ./sisyphe_key sisyphe@10.0.1.4:/etc/systemd/network/* k8sa2/
+	scp -i ./sisyphe_key sisyphe@10.0.1.5:/etc/systemd/network/* k8sb2/
+	scp -i ./sisyphe_key sisyphe@10.0.1.6:/etc/systemd/network/* k8sc2/
+	scp -i ./sisyphe_key sisyphe@10.0.1.10:/etc/systemd/network/* Backup/
+	\end{lstlisting}
+	
+	\begin{lstlisting}[language=Bash,caption={push-config}]
+	#!/bin/bash
+	
+	scp -i sisyphe_key Applicatif/* sisyphe@10.0.1.2:/etc/systemd/network/
+	scp -i sisyphe_key Reseau/* sisyphe@10.0.1.3:/etc/systemd/network/
+	scp -i sisyphe_key k8sa2/* sisyphe@10.0.1.4:/etc/systemd/network/ 
+	scp -i sisyphe_key k8sb2/* sisyphe@10.0.1.5:/etc/systemd/network/
+	scp -i sisyphe_key k8sc2/* sisyphe@10.0.1.6:/etc/systemd/network/
+	scp -i sisyphe_key Backup/* sisyphe@10.0.1.10:/etc/systemd/network/
+	\end{lstlisting}
+	
+	Il faut définir ces fichiers exécutables avec la commande suivante:
+	\begin{lstlisting}[language=Bash,caption={}]
+	chmod +x ./get-config ./push-config
+	\end{lstlisting}
+	
+	\section{Configuration du fichier /etc/hosts}
+	
+	Pour cette configuration on va utiliser le même principe que précédemment sauf que le fichier est le même pour toutes les VMs donc copiera le même fichier à chaque fois.
+	
+	Il sera d'ailleurs seulement utile de le push.
+	
+	
+	
+\end{document}
