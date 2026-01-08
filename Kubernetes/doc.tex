@@ -139,13 +139,18 @@
 	
 	\section{Configuration générale}
 	
+	\subsection{Nom de domaines}
+	
 	Dans toutes les VMs impliquées dans le cluster Kubernetes, la configuration suivante sera définie.
 	
 	\begin{lstlisting}[language=Bash,caption={/etc/hosts}]
 	10.0.1.3        rancher.rancher
 	10.0.1.4        master.rancher
 	10.0.1.5        worker.rancher
+	10.0.1.6		gitlab.rancher nailloux.gitlab.com nailloux.registry.com
 	\end{lstlisting}
+	
+	\subsection{Contrôle des ressources}
 	
 	Pour monitorer les ressources des VMs, nous ne pouvons pas nous servir des indications données par Proxmox VM car le Guest Agent est désactivé. Nous aurons donc de mauvaises indications pour la RAM par exemple. Je conseille donc:
 	
@@ -296,19 +301,16 @@
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	echo "CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
-		CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
-		PATH=$PATH:/var/lib/rancher/rke2/bin
-		KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> /etc/environnment
+	CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
+	#PATH=/usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin
+	KUBECONFIG=/etc/rancher/rke2/rke2.yaml" >> /etc/environnment
+	
+	echo "export PATH=$PATH:/var/lib/rancher/rke2/bin" > /etc/profile.d/rancher.sh
 	\end{lstlisting}
 	
 	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
 	
 	\begin{lstlisting}[language=Bash,caption={Machine master}]
-	export CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
-	export CONTAINERD_ADDRESS=unix:///run/k3s/containerd/containerd.sock
-	export PATH=$PATH:/var/lib/rancher/rke2/bin
-	export KUBECONFIG=/etc/rancher/rke2/rke2.yaml
-	
 	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --etcd --controlplane --worker --address 10.0.1.4 --internal-address 10.0.1.4
 	\end{lstlisting}
 	
@@ -519,26 +521,55 @@
 	REGISTRY_HTTP_ADDR: :0.0.0.0:5000 (The internal port).
 	
 	REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry.
+
+    REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin : '[''*'']'
+    REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods : '[''HEAD'', ''GET'', ''OPTIONS'', ''DELETE'']'
+    REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers : '[''Authorization'', ''Accept'', ''Cache-Control'']'
 	\end{lstlisting}
 
 	        
 	    Expose: ClusterIP, https, 5000, tcp
+	    
+	\subsection{UI}
+	
+	use the image joxit/docker-registry-ui.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	          - containerPort: 80
+	              name: http
+	              protocol: TCP
+	              _serviceType: ClusterIP
+	            - containerPort: 443
+	              name: https
+	              protocol: TCP
+	              _serviceType: ClusterIP
+	              
+	                  - name: NGINX_PROXY_PASS_URL
+	                    value: http://docker-registry:5000
+	                  - name: DELETE_IMAGES
+	                    value: 'true'
+	                  - name: SINGLE_REGISTRY
+	                    value: 'true'
+	\end{lstlisting}
+	
 	
 	\subsection{Phase 3: Expose it (The SSL Problem)}
 	
 	Docker refuses to push or pull from a registry over plain HTTP unless you configure every single node as an "insecure registry." It is much easier to set up an Ingress with SSL.
 	
-	    Generate a Certificate: Since you are in a private network, you can use a "Secret" to store a self-signed cert, or use Cert-Manager if you have it.
-	    
+  Generate a Certificate: Since you are in a private network, you can use a "Secret" to store a self-signed cert, or use Cert-Manager if you have it.
+  
 	  	Dans la section Secret: Create > TLS Certificate et il suffit de renseigner la clé privée et publique
 	
-	    Create Ingress:
+  Create Ingress:
 	
-	        Host: registry.rancher (or whatever your DNS handles).
+      Host: registry.rancher (or whatever your DNS handles).
 	
-	        Service: docker-registry on Port 5000.
+      Service: docker-registry-ui on Port 80.
 	
-	        Protocol: HTTPS.
+      Protocol: HTTPS.
+      
+      Il faut ensuite aller dans Labels \& Annotations et définir la valeur "nginx.ingress.kubernetes.io/proxy-body-size" à 0 pour ne pas subir le 413 too large error.
 	        
 	
 	\subsection{Phase 4: Testing the Registry}
