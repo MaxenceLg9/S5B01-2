@@ -6,5 +6,3 @@ scp -i sisyphe_key k8sa2/* sisyphe@10.0.1.4:/etc/systemd/network/
 scp -i sisyphe_key k8sb2/* sisyphe@10.0.1.5:/etc/systemd/network/
 scp -i sisyphe_key k8sc2/* sisyphe@10.0.1.6:/etc/systemd/network/
 scp -i sisyphe_key Backup/* sisyphe@10.0.1.10:/etc/systemd/network/
-
-scp -i sisyphe_key * sisyphe@10.0.1.10:/etc/systemd/network/

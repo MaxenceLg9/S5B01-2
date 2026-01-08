@@ -4,6 +4,7 @@ Name=ens19
 [Network]
 Address=10.0.1.3/28
 DHCP=ipv4
+DNS=10.0.1.2
 
 [DHCPv4]
 UseGateway=no

@@ -4,6 +4,7 @@ Name=ens19
 [Network]
 Address=10.0.1.6/28
 Address=2001:db8:10::6/124
+DNS=10.0.1.2
 DHCP=ipv4
 
 [DHCPv4]
