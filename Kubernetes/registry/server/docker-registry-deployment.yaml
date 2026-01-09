@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: '5'
+    field.cattle.io/publicEndpoints: 'null'
+  generation: 8
+  labels:
+    workload.user.cattle.io/workloadselector: apps.deployment-default-docker-registry
+  name: docker-registry
+  namespace: default
+  resourceVersion: '441729'
+  uid: 0a6ca7b6-7130-48f2-af14-7215e8405451
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      workload.user.cattle.io/workloadselector: apps.deployment-default-docker-registry
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        workload.user.cattle.io/workloadselector: apps.deployment-default-docker-registry
+      namespace: default
+    spec:
+      containers:
+        - env:
+            - name: REGISTRY_HTTP_ADDR
+              value: 0.0.0.0:5000
+            - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+              value: /var/lib/registry
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
+              value: '[''*'']'
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
+              value: '[''HEAD'', ''GET'', ''OPTIONS'', ''DELETE'']'
+            - name: 'REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers '
+              value: '[''Authorization'', ''Accept'', ''Cache-Control'']'
+          image: registry:latest
+          imagePullPolicy: Always
+          name: docker-container
+          ports:
+            - containerPort: 5000
+              name: https
+              protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/lib/registry
+              name: registry
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: registry
+          persistentVolumeClaim:
+            claimName: registry-data

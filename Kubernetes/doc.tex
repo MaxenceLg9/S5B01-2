@@ -356,7 +356,7 @@
 	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=1
 	\end{lstlisting}
 	
-	\chapter{Creation d'un Workload}
+	\chapter{Deploiement de l'application}
 	
 	Tout d'abord, avant de déployer quoi que ce soit il faut convertir le docker-compose.yml en fichier de déploiement Kubernetes, un manifest.
 	
@@ -367,11 +367,15 @@
 	\end{lstlisting}	
 
 
-	\chapter{Cluster components}
+	\chapter{Déploiement de composants annexes}
+	
+	Dans le même temps que le déploiement de l'application du club photo nailloux, l'infrastructure de l'entreprise nécessite d'autres services, qui seront détaillés et déployés ici.
+	
+	En particulier un Gitlab et un Registre Docker.
 	
 	\section{Gitlab}
 	
-	\subsection{Phase 1: Create the Storage (The Foundation)}
+	\subsection{Phase 1: Creation des volumes}
 	
 	Dans la continuité des volumes docker, il existe ce qu'on appelle les \textbf{Persistent Volume Claims}.
 	\begin{itemize}
@@ -380,18 +384,14 @@
 	\item gitlab-log	5Gi	/var/log/gitlab	Logs
 	\end{itemize}
 		
-	\subsection{Phase 2: Create the ConfigMap}
+	\subsection{Phase 2: Creation de la ConfigMap}
 	
 	Pour définir le nom de domaine qu'on va utiliser pour accéder au serveur Gitlab, on créé une \textbf{ConfigMap} avec la procédure suivante:
 	
 	Dans Rancher: Cluster $\rightarrow$ Resources $\rightarrow$ ConfigMaps.
 	
-	    Create a new one named gitlab-config.
-	
-	    Key: gitlab.rb
-	
-	    Value (Paste this):
-	
+	On créé une nouvelle configuration nommée \textbf{gitlab-config}.
+	On définit une clé \textbf{gitlab.rb} avec comme valeur:
 	\begin{lstlisting}[language=Bash,caption={}]
 	external_url 'http://nailloux.gitlab.com'
 	gitlab_rails['time_zone'] = 'Europe/Paris'
@@ -399,70 +399,72 @@
 	
 
 	
-	\subsection{Phase 3: Deploy GitLab (The Workload)}
+	\subsection{Phase 3: Deploiement des pods}
 	
-	Create a Deployment with the following specific settings.
+	Dans la section Workloads -> Deployment on créé un Déploiement comme ceci
 	\subsubsection{Basic Info}
 	
 	    Name: gitlab
 	
 	    Docker Image: gitlab/gitlab-ce:latest
 	
-	\subsubsection{Networking (Ports)}
+	\subsubsection{Ouverture de ports}
 	
-	Add these "Service" ports:
+	Il faut ensuite ouvrir des ports, qui impliqueront la création d'un service.
 	
-	    HTTP: Port 80 (mapped to 80 in container)
-	
-	    SSH: Port 2222 (mapped to 22 in container) — Note: We use 2222 because 22 is usually taken by your actual Node.
+	\begin{itemize}
+	\item ClusterIP, http, Port 80
+	\item (Optionnel) ClusterIP, ssh, 2222
+	\end{itemize}	
 	
 	\subsubsection{Storage (Volume Mounts)}
+	Il faut ensuite monter les volumes créés et la ConfigMap donc les pods.
 	
-	Mount your PVCs and the ConfigMap:
+	\begin{itemize}
+	\item PVC gitlab-etc → /etc/gitlab
+	\item PVC gitlab-opt → /var/opt/gitlab
+	\item PVC gitlab-log → /var/log/gitlab
+	\item ConfigMap gitlab-config → Key gitlab.rb mounted to /etc/gitlab/gitlab.rb
+	\end{itemize}
 	
-	    PVC gitlab-etc → /etc/gitlab
+	\subsubsection{Security Context}
 	
-	    PVC gitlab-opt → /var/opt/gitlab
+	Il faut savoir que Rancher par défaut, cloisonne l'utilisateur chargé de lancer le service. Cela mène à plusieurs problèmes de permissions si le service nécessite de lire des fichiers protégés.
 	
-	    PVC gitlab-log → /var/log/gitlab
+	C'est le cas ici avec Gitlab.
+	Dans la section Security Context, il faut donc modifier les paramètres suivantes
 	
-	    ConfigMap gitlab-config → Key gitlab.rb mounted to /etc/gitlab/gitlab.rb
+	\begin{itemize}
+	\item Privileged: True
+	\item Run as User: 0 (Root)
+	\end{itemize}
+		
+	\subsection{Phase 4: Attente}
 	
-	\subsubsection{Security Context (CRITICAL)}
+	GitLab prend 5 à 10 minutes pour démarrer la première fois.
 	
-	As we discovered, GitLab needs permissions to fix the folders created by local-path.
+	Il ne faut donc surtout pas ajouter de "Health Check" car cela mettra le pod/déploiement en défaut.
 	
-	    Privileged: True
+	On peut accéder aux logs avec
+	\begin{lstlisting}[language=Bash,caption={}]
+	bash kubectl logs -f deployment/gitlab
+	\end{lstlisting}
 	
-	    Run as User: 0 (Root)
+	\subsection{Phase 5:  Création d'une redirection de paquets avec un Ingress}
+		
+	    Dans Service Discovery > Ingresses.
 	
-	\subsection{Phase 4: Handle the "Wait"}
-	
-	GitLab takes 5 to 10 minutes to start the first time.
-	
-	    Do not add Health Checks yet. If you add a "Liveness Probe" now, Kubernetes will see the app isn't responding (because it's still installing) and kill it, creating a "CrashLoopBackOff."
-	
-	    Monitor the logs: ```bash kubectl logs -f deployment/gitlab
-	
-	    Wait until you see the "GitLab Reconfigured!" message and the internal Nginx starts.
-	
-	\subsection{Phase 5: Accessing GitLab (The Ingress)}
-	
-	Once the logs show GitLab is up, you need to route traffic from your 10.x or 100.x IP to the pod.
-	
-	    Go to Service Discovery > Ingresses.
-	
-	    Create a new Ingress.
+	    Create
 	
 	    Host: git.yourdomain.com
 	
 	    Path: / → Service: gitlab → Port: 80.
+	    
+	    On peut définir le HTTPS pour l'Ingress dans la section Certificates en ajoutant un.
 	
-	\subsection{Phase 6: Get your Password}
+	\subsection{Phase 6: Récupération du mot de passe}
 	
-	Once the site loads, you need the initial root password.
-	
-	    Use the Rancher "Execute Shell" on the GitLab pod.
+	Une fois que le serveur Gitlab est lancé, (environ 5 minutes), on peut récupérer le mot de passe généré par défaut comme ceci:
 	
 	 \begin{lstlisting}[language=,caption={}]
 	 root@k8sc2:~# kubectl get pods
@@ -492,32 +494,28 @@
 	
 	Le serveur gitlab possède déjà une option pour disposer d'un serveur Docker Registry mais on ne va pas utiliser cette méthode ici.
 	
-	\subsection{Phase 1: Create Storage for your Images}
+	\subsection{Phase 1: Creation des PVC}
 	
-	Docker images take up a lot of space. You need a persistent place to store them so they don't disappear when the pod restarts.
+	Afin de stocker les images docker (volumineuses), nous allons créer des volumes persistants (PVC).
 	
-	    Go to Storage > PersistentVolumeClaims.
+	Il faut aller dans Storage > PersistentVolumeClaims.
 	
-	    Create a PVC named registry-data.
+	On créé un volume registry-data avec les paramètres suivants:
+	\begin{itemize}
+	\item Size: 20GiB
+	\item Classe : local-path (créée précédemment)
+	\end{itemize}
 	
-	    Size: At least 20Gi (depending on how many images you plan to store).
+	\subsection{Phase 2: Deploiement des pods}
+    Dans la section Workload > Deployments puis Create.
+
+	\begin{enumerate}
+	\item Nom: docker-registry.
+	\item Image: registry:3
+	\item Stockage: Monter le PVC registry-data dans /var/lib/registry.
+	\end{enumerate}
 	
-	    Storage Class: local-path.
-	
-	\subsection{Phase 2: Deploy the Registry Workload}
-	
-	    Go to Workload > Deployments and click Create.
-	
-	    Name: docker-registry.
-	
-	    Image: registry:2.
-	
-	    Storage:
-	
-	        Mount the PVC registry-data to /var/lib/registry.
-	
-	    Environment Variables:
-	\begin{lstlisting}[language=Bash,caption={}]
+	\begin{lstlisting}[language=Bash,caption={Variables d'environnements:}]
 	REGISTRY_HTTP_ADDR: :0.0.0.0:5000 (The internal port).
 	
 	REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry.
@@ -527,58 +525,58 @@
     REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers : '[''Authorization'', ''Accept'', ''Cache-Control'']'
 	\end{lstlisting}
 
-	        
-	    Expose: ClusterIP, https, 5000, tcp
+	Sera ensuite exposé le port 5000 en tcp, avec un service ClusterIP, nommé https.
 	    
 	\subsection{UI}
+	Afin d'interfacer proprement notre serveur Docker-Registry, nous allons faire appel à une autre image docker \textbf{joxit/docker-registry-ui} qui implique un nouveau déploiement chargé d'afficher une UI.
 	
-	use the image joxit/docker-registry-ui.
+	Il faudra définir les paramètres suivants:
+	\begin{itemize}
+	\item Ouverture du port 80, en TCP, avec ClusterIP, nom: http
+	\item Ouverture du port 443, en TCP, avec ClusterIP, nom: https
+	\end{itemize}
 	
 	\begin{lstlisting}[language=Bash,caption={}]
-	          - containerPort: 80
-	              name: http
-	              protocol: TCP
-	              _serviceType: ClusterIP
-	            - containerPort: 443
-	              name: https
-	              protocol: TCP
-	              _serviceType: ClusterIP
-	              
-	                  - name: NGINX_PROXY_PASS_URL
-	                    value: http://docker-registry:5000
-	                  - name: DELETE_IMAGES
-	                    value: 'true'
-	                  - name: SINGLE_REGISTRY
-	                    value: 'true'
+	NGINX_PROXY_PASS_URL: http://docker-registry:5000
+	DELETE_IMAGES: true
+	SINGLE_REGISTRY: true
 	\end{lstlisting}
 	
 	
-	\subsection{Phase 3: Expose it (The SSL Problem)}
+	\subsection{Phase 3: Création d'un Ingress avec HTTPS}
 	
-	Docker refuses to push or pull from a registry over plain HTTP unless you configure every single node as an "insecure registry." It is much easier to set up an Ingress with SSL.
+	Docker, par défaut, refuse de communiquer avec une API/Serveur n'utilisant pas HTTPS ou n'ayant pas un certificat SSL valide. Il est plutôt aisé de mettre en place un service HTTPS avec Rancher/Kubernetes au moyen des \textbf{Ingress}.
 	
-  Generate a Certificate: Since you are in a private network, you can use a "Secret" to store a self-signed cert, or use Cert-Manager if you have it.
-  
-	  	Dans la section Secret: Create > TLS Certificate et il suffit de renseigner la clé privée et publique
+	\begin{lstlisting}[language=Bash,caption={}]
+	export KEY_FILE=key.pem
+	export CERT_FILE=cert.pem
+	export HOST=nailloux.registry.com
 	
-  Create Ingress:
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $KEY_FILE -out $CERT_FILE -subj "/CN=$HOST/O=$HOST" -addext "subjectAltName = DNS:$HOST"
+	\end{lstlisting}
 	
-      Host: registry.rancher (or whatever your DNS handles).
+	Une fois le certificat généré, il suffit d'aller dans la section Secret: Create > TLS Certificate et de renseigner la clé privée et le certificat.
 	
-      Service: docker-registry-ui on Port 80.
+	Maintenant, il faut aller dans \textbf{Service Discovery} -> Ingresses -> Create.
 	
-      Protocol: HTTPS.
-      
-      Il faut ensuite aller dans Labels \& Annotations et définir la valeur "nginx.ingress.kubernetes.io/proxy-body-size" à 0 pour ne pas subir le 413 too large error.
+	On peut renseigner les informations suivantes:
+	\begin{itemize}
+	\item Request Host: nailloux.registry.com
+	\item Service: docker-registry-ui on Port 80
+	\item HTTPS
+	\item Labels \& Annotations : "nginx.ingress.kubernetes.io/proxy-body-size" = 0 pour ne pas subir le 413 too large error.
+	\item Certificates : Secret Name, on déroule et sélectionne celui créé précédemment et met comme Domain Name: nailloux.registry.com
+	\end{itemize}
 	        
 	
 	\subsection{Phase 4: Testing the Registry}
 	
-	From your development machine (where you build your Dockerfiles):
+	Maintenant il est possible de publier des images dans le registre en taggant les images de la manière suivante:
 	
-	    Tag your image: docker tag nailloux-app:v1 registry.rancher/nailloux-app:v1
-	
-	    Push it: docker push registry.rancher/nailloux-app:v1
+	\begin{lstlisting}[language=Bash,caption={}]
+	docker tag nginx:latest nailloux.registry.com/nginx:latest
+	docker push nailloux.registry.com/nginx:latest
+	\end{lstlisting}
 	
 	
 	\chapter{Troubleshooting}
