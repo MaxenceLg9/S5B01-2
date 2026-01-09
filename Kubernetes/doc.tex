@@ -287,17 +287,11 @@
 	
 	\chapter{Création d'un cluster}
 	
-	\section{Cluster pour l'application Nailloux}
-	
-	\section{Cluster pour les composants divers, Git, DockerRegistry...}
-	
-	\subsubsection{Enregistrement}
-	
-	\begin{lstlisting}[language=Bash,caption={}]
-	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token 272xjzq28nm5xp4cpjjrxt4zqrwvsmftq45xs5bx4vv7kk65mh72pv --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --etcd --controlplane --worker --address 10.0.1.6 --internal-address 10.0.1.6
-	\end{lstlisting}
-	
 	\section{Enrôlement de machines}
+	
+	\subsection{Variables d'environnement}
+	
+	Parce que rancher nécessite des variables d'environnements qui ne sont pas forcément définis de base:
 	
 	\begin{lstlisting}[language=Bash,caption={}]
 	echo "CRI_CONFIG_FILE=/var/lib/rancher/rke2/agent/etc/crictl.yaml
@@ -308,53 +302,21 @@
 	echo "export PATH=$PATH:/var/lib/rancher/rke2/bin" > /etc/profile.d/rancher.sh
 	\end{lstlisting}
 	
+	\subsection{Ajout d'une mâchine Master}
+	
 	Pour cela il faut aller dans la section \textbf{Clusters $\Longrightarrow$ <Cluster> $\Longrightarrow$ Registration}
 	
 	\begin{lstlisting}[language=Bash,caption={Machine master}]
 	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --etcd --controlplane --worker --address 10.0.1.4 --internal-address 10.0.1.4
 	\end{lstlisting}
 	
+	\subsection{Ajout d'une machine Worker only}
+	
 	\begin{lstlisting}[language=Bash,caption={Machine worker}]
 	curl --insecure -fL https://rancher.rancher/system-agent-install.sh | sudo  sh -s - --server https://rancher.rancher --label 'cattle.io/os=linux' --token tvg69x5vkm9szzlzsj6qqkx7wggzrgvt2grc755nth29h2ncjbgthz --ca-checksum fdc9c50ea58442994213e96883b6a5ca39227fc7d4116e60fa1026c123f56583 --worker --address 10.0.1.5 --internal-address 10.0.1.5
 	\end{lstlisting}
 	
-	Si DNS issue:
-	
-	\begin{lstlisting}[language=Bash,caption={}]
-	kubectl -n cattle-system logs -l app=cattle-cluster-agent
-	
-	export KUBE_EDITOR="nano"
-	kubectl edit configmap rke2-coredns-rke2-coredns -n kube-system
-	
-  Corefile: |-
-    .:53 {
-        errors
-        health {
-            lameduck 10s
-        }
-        ready
-        kubernetes  cluster.local  cluster.local in-addr.arpa ip6.arpa {
-            pods insecure
-            fallthrough in-addr.arpa ip6.arpa
-            ttl 30
-        }
-        hosts {
-            10.0.1.3 rancher.rancher
-            fallthrough
-        }
-        prometheus  0.0.0.0:9153
-        forward  . /run/systemd/resolve/resolv.conf
-        cache  30
-        loop
-        reload
-        loadbalance
-    }
-
-	
-	kubectl rollout restart deployment rke2-coredns-rke2-coredns -n kube-system
-	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=0
-	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=1
-	\end{lstlisting}
+	Si souci, il faut aller voir la section \hyperref[sec:dns]{Troubleshooting}.
 	
 	\chapter{Deploiement de l'application}
 	
@@ -364,9 +326,8 @@
 	kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
 	
 	kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-	\end{lstlisting}	
-
-
+	\end{lstlisting}
+	
 	\chapter{Déploiement de composants annexes}
 	
 	Dans le même temps que le déploiement de l'application du club photo nailloux, l'infrastructure de l'entreprise nécessite d'autres services, qui seront détaillés et déployés ici.
@@ -582,6 +543,7 @@
 	\chapter{Troubleshooting}
 	
 	\section{DNS}
+	\label{sec:dns}
 	
 	Lorsqu'on utilise systemd-resolved, le fichier /etc/resolv.conf utilise une adresse locale inutilisable par le pod \textbf{coreDNS}. Il faut donc spécifier le fichier où systemd-resolved garde ses serveurs DNS.
 	
@@ -591,6 +553,45 @@
 	  kubelet:
 	    extra_args:
 	      resolv-conf: "/run/resolvconf/resolv.conf"' > /etc/rancher/rke2/config.yaml
+	\end{lstlisting}
+	
+	On peut aussi faire la méthode suivante, moins flexible, en ajoutant en dur un hôte comme on le ferait dans le fichier \textbf{/etc/hosts}.
+	Solution à ne pas faire car on ne résoud pas réellement le souci DNS.
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl -n cattle-system logs -l app=cattle-cluster-agent
+	
+	export KUBE_EDITOR="nano"
+	kubectl edit configmap rke2-coredns-rke2-coredns -n kube-system
+	
+  Corefile: |-
+    .:53 {
+        errors
+        health {
+            lameduck 10s
+        }
+        ready
+        kubernetes  cluster.local  cluster.local in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+            ttl 30
+        }
+        hosts {
+            10.0.1.3 rancher.rancher
+            fallthrough
+        }
+        prometheus  0.0.0.0:9153
+        forward  . /run/systemd/resolve/resolv.conf
+        cache  30
+        loop
+        reload
+        loadbalance
+    }
+
+	
+	kubectl rollout restart deployment rke2-coredns-rke2-coredns -n kube-system
+	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=0
+	kubectl scale deployments/cattle-cluster-agent -n cattle-system --replicas=1
 	\end{lstlisting}
 	
 	
