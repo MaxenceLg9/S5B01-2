@@ -226,7 +226,7 @@
 	\subsection{Installation de Calicoctl}
 	
 	\begin{lstlisting}[language=Bash,caption={}]
-	curl -L https://github.com/projectcalico/calico/releases/download/v3.31.3/calicoctl-linux-amd64 -o calicoctl
+	curl -L https://github.com/projectcalico/calico/releases/download/v3.30.4/calicoctl-linux-amd64 -o calicoctl
 	
 	chmod +x ./calicoctl
 	
@@ -323,6 +323,79 @@
 	
 	Si souci, il faut aller voir la section \hyperref[sec:dns]{Troubleshooting}.
 	
+	\chapter{Replication du Noeud Master}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	In the context of RKE2/K3s (the tech stack you are currently using), "replicating" a master node means adding additional Control Plane + Etcd nodes to form a High Availability (HA) cluster.
+	
+	Since you are working across different subnets, the process requires a specific configuration to ensure the nodes can communicate and that the certificates are valid for your cross-subnet IPs.
+	1. Requirements for Master Replication
+	
+	    An odd number of masters: To maintain "Quorum" (the ability to make decisions), you need 3, 5, or 7 master nodes. 3 is the standard for HA.
+	
+	    The Shared Token: You need the token from your first master (found at /var/lib/rancher/rke2/server/node-token or /var/lib/rancher/k3s/server/node-token).
+	
+	    A Fixed Registration Address: As discussed, this should be a DNS name pointing to your master IPs.
+	
+	2. Configure the First Master (Initial Node)
+	
+	If you already installed the first master, ensure its /etc/rancher/rke2/config.yaml (or k3s) has the tls-san parameter. This ensures the SSL certificates allow the "Registration DNS" you'll use.
+	YAML
+	
+	token: my-shared-secret-token
+	tls-san:
+	  - k8s-api.example.com  # The DNS name for your masters
+	  - 10.0.1.3             # IP of Master 1
+	  - 10.0.2.3             # IP of Master 2 (Subnet B)
+	
+	3. Join the Second Master (The Replication)
+	
+	On your server in the second subnet, install the same version of RKE2/K3s, but point it to the first master.
+	
+	The config.yaml for Master #2:
+	YAML
+	
+	server: https://k8s-api.example.com:9345  # Point to the first node
+	token: my-shared-secret-token             # Must match node #1
+	tls-san:
+	  - k8s-api.example.com
+	# Important: Ensure this node knows where the "real" DNS is
+	resolv-conf: "/run/systemd/resolve/resolv.conf" 
+	
+	4. Handling the "No Load Balancer" Problem
+	
+	Since you cannot use a load balancer across your subnets, you must handle the Initial Join carefully.
+	
+	    Direct Join: For the very first join of Master #2, you can temporarily point the server parameter directly to the IP of Master #1: server: https://10.0.1.3:9345.
+	
+	    DNS Update: Once Master #2 is up, add its IP to your k8s-api.example.com DNS record.
+	
+	    Master #3: When you join the third master, point its server address to the DNS name. It will now be able to reach either Master #1 or Master #2 to join.
+	
+	5. Verification
+	
+	Once the replication is complete, check that all masters are participating in the etcd cluster and the control plane:
+	Bash
+	
+	# Check node status
+	kubectl get nodes
+	
+	# Check etcd health (RKE2 example)
+	/var/lib/rancher/rke2/bin/kubectl \
+	  --kubeconfig /etc/rancher/rke2/rke2.yaml \
+	  get componentstatuses
+	
+	Summary of HA across Subnets
+	
+	    Etcd: Will automatically replicate data from Master 1 to Master 2 over the network.
+	
+	    API Server: Will be active on both nodes.
+	
+	    Workers: Will automatically switch between Master 1 and Master 2 if one subnet goes offline.
+	
+	Would you like the specific shell commands to extract the node-token from your first master to prepare for the join?
+	\end{lstlisting}
+	
 	\chapter{Deploiement de l'application}
 	
 	Tout d'abord, avant de déployer quoi que ce soit il faut convertir le docker-compose.yml en fichier de déploiement Kubernetes, un manifest.
@@ -368,9 +441,9 @@
 	\subsection{Phase 3: Deploiement des pods}
 	
 	Dans la section Workloads -> Deployment on créé un Déploiement comme ceci
-	\subsubsection{Basic Info}
+	\subsubsection{Conteneur}
 	
-	    Name: gitlab
+	Nom: Gitlab
 	
 	    Docker Image: gitlab/gitlab-ce:latest
 	
@@ -546,6 +619,16 @@
 	
 	
 	\chapter{Troubleshooting}
+	
+	
+	\section{Cannot allocate new block due to per host block limit}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	calicoctl datastore migrate lock
+	calicoctl ipam check -o report.json
+	calicoctl ipam release --from-report report.json
+	calicoctl datastore migrate unlock
+	\end{lstlisting}
 	
 	\section{DNS}
 	\label{sec:dns}
