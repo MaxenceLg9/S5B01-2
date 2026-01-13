@@ -434,6 +434,7 @@
 	\begin{lstlisting}[language=Bash,caption={}]
 	external_url 'http://nailloux.gitlab.com'
 	gitlab_rails['time_zone'] = 'Europe/Paris'
+	#gitlab_rails['initial_root_password'] = "qJHiA@wwaagi46U"
 	\end{lstlisting}
 	
 
@@ -441,6 +442,13 @@
 	\subsection{Phase 3: Deploiement des pods}
 	
 	Dans la section Workloads -> Deployment on créé un Déploiement comme ceci
+	
+	\subsubsection{Variables d'environnments}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	GITLAB_ROOT_EMAIL="admin@example.com" GITLAB_ROOT_PASSWORD="strongpassword"
+	\end{lstlisting}
+	
 	\subsubsection{Conteneur}
 	
 	Nom: Gitlab
@@ -453,7 +461,8 @@
 	
 	\begin{itemize}
 	\item ClusterIP, http, Port 80
-	\item (Optionnel) ClusterIP, ssh, 2222
+	\item ClusterIP, ssh, 22
+	\item ClusterIP, ssh2, 2222
 	\end{itemize}	
 	
 	\subsubsection{Storage (Volume Mounts)}
@@ -486,7 +495,7 @@
 	
 	On peut accéder aux logs avec
 	\begin{lstlisting}[language=Bash,caption={}]
-	bash kubectl logs -f deployment/gitlab
+	kubectl logs -f deployment/gitlab
 	\end{lstlisting}
 	
 	\subsection{Phase 5:  Création d'une redirection de paquets avec un Ingress}
@@ -495,7 +504,7 @@
 	
 	    Create
 	
-	    Host: git.yourdomain.com
+	    Host: nailloux.gitlab.com
 	
 	    Path: / → Service: gitlab → Port: 80.
 	    
@@ -519,7 +528,7 @@
 	 #          If this password doesn't work, reset the admin password using:
 	 #          https://docs.gitlab.com/security/reset_user_password/#reset-the-root-password
 	 
-	 Password: fU16xdsVRA/de4Mf/N2geVuifm8kDIqJkeB3zQVnwcE=
+	 Password: JKk4H/BOVuXOFgi899ZRsN4HBnLzmWLQAveH0kmtAyE=
 	 
 	 # NOTE: This file is automatically deleted after 24 hours on the next reconfigure run.
 	 \end{lstlisting}

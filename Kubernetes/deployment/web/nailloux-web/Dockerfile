@@ -44,14 +44,6 @@ WORKDIR /var/www/html
 # 7. Copie du code source de l'application dans le conteneur
 COPY . /var/www/html/
 
-# Use the Docker connection file
-# 8. Configuration de la connexion à la base de données pour Docker
-COPY /var/www/html/backend/db/connection.docker.new.php /var/www/html/backend/db/connection.php
-
-COPY ./ /var/www/html
-
-COPY ./upload /var/www/html/upload
-
 # Configure Apache
 # 9. Configuration du VirtualHost Apache (DocumentRoot, DirectoryIndex, etc.)
 RUN echo '<VirtualHost *:80>\n\

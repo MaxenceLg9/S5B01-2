@@ -1,22 +1,105 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gitlab-deployment
+  name: gitlab
+  annotations:
+    {}
+  labels:
+    workload.user.cattle.io/workloadselector: apps.deployment-default-gitlab
+  namespace: default
 spec:
   selector:
     matchLabels:
-      app: gitlab
-  replicas: 1 # tells deployment to run 2 pods matching the template
+      workload.user.cattle.io/workloadselector: apps.deployment-default-gitlab
   template:
     metadata:
       labels:
-        app: gitlab
+        workload.user.cattle.io/workloadselector: apps.deployment-default-gitlab
+      namespace: default
     spec:
       containers:
-      - name: gitlab
-        image: gitlab:gitlab-ce
-        ports:
-            - containerPort: 80
+        - imagePullPolicy: Always
+          name: gitlab-container
+          securityContext:
+            runAsNonRoot: false
+            readOnlyRootFilesystem: false
+            capabilities: {}
+            privileged: true
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+          volumeMounts:
+            - name: etc
+              mountPath: /etc/gitlab
+            - name: log
+              mountPath: /var/log/gitlab
+            - name: opt
+              mountPath: /var/opt/gitlab
+            - name: gitlab.rb
+              mountPath: /etc/gitlab/gitlab.rb
+              subPath: gitlab.rb
+          _init: false
+          image: gitlab/gitlab-ce:latest
+          ports:
+            - name: ssh
+              expose: true
               protocol: TCP
-            - containerPort: 443
+              containerPort: 80
+              _serviceType: ClusterIP
+              _ipam: dhcp
+            - name: http
+              expose: true
               protocol: TCP
+              containerPort: 80
+              _serviceType: ClusterIP
+              _ipam: dhcp
+          __active: true
+      affinity:
+      imagePullSecrets:
+      initContainers:
+      restartPolicy: Always
+      volumes:
+        - name: etc
+          _type: persistentVolumeClaim
+          persistentVolumeClaim:
+            claimName: gitlab-etc
+          __newPvc:
+            type: persistentvolumeclaim
+            metadata:
+              namespace: default
+            spec:
+              storageClassName: ''
+              volumeName: ''
+              resources:
+                requests: {}
+        - name: log
+          _type: persistentVolumeClaim
+          persistentVolumeClaim:
+            claimName: gitlab-log
+          __newPvc:
+            type: persistentvolumeclaim
+            metadata:
+              namespace: default
+            spec:
+              storageClassName: ''
+              volumeName: ''
+              resources:
+                requests: {}
+        - name: opt
+          _type: persistentVolumeClaim
+          persistentVolumeClaim:
+            claimName: gitlab-opt
+          __newPvc:
+            type: persistentvolumeclaim
+            metadata:
+              namespace: default
+            spec:
+              storageClassName: ''
+              volumeName: ''
+              resources:
+                requests: {}
+        - name: gitlab.rb
+          _type: configMap
+          configMap:
+            name: gitlab-config
+  replicas: 1
+__clone: true
