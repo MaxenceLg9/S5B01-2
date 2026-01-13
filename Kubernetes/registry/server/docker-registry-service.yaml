@@ -1,23 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["default/docker-registry"]'
-    management.cattle.io/ui-managed: 'true'
   name: docker-registry
   namespace: default
-  ownerReferences:
-    - apiVersion: apps/v1
-      controller: true
-      kind: Deployment
-      name: docker-registry
-      uid: 0a6ca7b6-7130-48f2-af14-7215e8405451
-  resourceVersion: '60885'
-  uid: 181552ca-ee50-4b52-97c3-8618032d77fc
 spec:
-  clusterIP: 10.43.210.73
-  clusterIPs:
-    - 10.43.210.73
   internalTrafficPolicy: Cluster
   ipFamilies:
     - IPv4

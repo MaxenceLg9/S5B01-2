@@ -24,7 +24,7 @@ data:
         error_log /var/log/nginx/nailloux_error.log;
 
         location / {
-            proxy_pass http://app:80;
+            proxy_pass http://web:80;
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-Host $host;
             proxy_set_header X-Real-IP $remote_addr;
@@ -38,7 +38,7 @@ data:
         }
 
         location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
-            proxy_pass http://app:80;
+            proxy_pass http://web:80;
             proxy_set_header Host $host;
             proxy_set_header X-Forwarded-Host $host;
             proxy_set_header X-Real-IP $remote_addr;
