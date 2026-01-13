@@ -49,6 +49,6 @@ spec:
               name: uploads
       restartPolicy: Always
       volumes:
-        - configMap:
-            name: app-cm0-uploads
-          name: uploads
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: web-pvc-uploads
