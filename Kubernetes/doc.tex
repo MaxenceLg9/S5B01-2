@@ -261,7 +261,8 @@
 	  --namespace cattle-system \
 	  --set hostname=rancher.rancher \
 	  --set replicas=1 \
-	  --set bootstrapPassword=testpassword
+	  --set bootstrapPassword=testpassword \
+	  --set additionalTrustedCAs=true
 	\end{terminal}
 	
 	Il faut maintenant attendre car l'installation nécessite quelques minutes.
@@ -281,6 +282,12 @@
 	\end{terminal}
 	
 	Cela permet d'arrêter temporairement le pod Rancher.
+	
+	\subsection{Ajout d'un certificat Root}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	kubectl -n cattle-system create secret generic tls-ca-additional --from-file=ca-additional.pem=./ca-additional.pem
+	\end{lstlisting}
 	
 	\section{Réinitialisation du cluster}
 	
@@ -628,6 +635,15 @@
 	
 	
 	\chapter{Troubleshooting}
+	
+	\section{Problème de certificats SSL}
+	
+	\begin{lstlisting}[language=Bash,caption={}]
+	echo 'configs:
+	  "nailloux.registry.com":
+	    tls:
+	      ca_file: "/usr/local/share/ca-certificates/custom.crt"' > /etc/rancher/rke2/registries.yaml
+	\end{lstlisting}
 	
 	
 	\section{Cannot allocate new block due to per host block limit}

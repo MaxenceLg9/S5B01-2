@@ -9,8 +9,8 @@ metadata:
   name: db
 spec:
   ports:
-    - name: "33060"
-      port: 33060
+    - name: "mysql"
+      port: 3306
       targetPort: 3306
   selector:
     io.kompose.service: db

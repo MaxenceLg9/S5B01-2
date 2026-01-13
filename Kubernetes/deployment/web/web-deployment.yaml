@@ -24,8 +24,8 @@ spec:
     spec:
       initContainers:
       - name: init-deployment
-        image: init-container:latest  # Use the SAME image as your app
-        command: ['sh', '-c', 'cp -rn /home/upload. /mnt/data/ && chown -R 33:33 /mnt/data']
+        image: nailloux.registry.com/init-container:latest  # Use the SAME image as your app
+        command: ['sh', '-c', 'cp -rn /home/upload/ /mnt/data/ && chown -R 33:33 /mnt/data']
         volumeMounts:
         - name: uploads
           mountPath: /mnt/data
@@ -39,7 +39,7 @@ spec:
               value: rootpassword
             - name: DB_USER
               value: root
-          image: nailloux-web
+          image: nailloux.registry.com/nailloux-web:latest
           name: nailloux-web-container
           ports:
             - containerPort: 80
