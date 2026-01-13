@@ -638,13 +638,9 @@
 	
 	\section{Problème de certificats SSL}
 	
-	\begin{lstlisting}[language=Bash,caption={}]
-	echo 'configs:
-	  "nailloux.registry.com":
-	    tls:
-	      ca_file: "/usr/local/share/ca-certificates/custom.crt"' > /etc/rancher/rke2/registries.yaml
-	\end{lstlisting}
-	
+	Ajout d'un certificat trusted dans la configuration du cluster > registries.
+
+	\includegraphics[width=18cm]{trusted-ca.png}
 	
 	\section{Cannot allocate new block due to per host block limit}
 	
