@@ -8,6 +8,4 @@ kind: Secret
 metadata:
   name: web-ingress.tls
   namespace: default
-  resourceVersion: '434491'
-  uid: 30cee275-4ecb-4333-8088-34be7753c6a9
 type: kubernetes.io/tls

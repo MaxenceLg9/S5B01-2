@@ -5,7 +5,7 @@ Name=ens19
 Address=10.0.1.4/28
 Address=2001:db8:10::4/64
 DHCP=ipv4
-DNS=10.0.1.2
+DNS=10.0.1.2 10.1.1.2
 
 [DHCPv4]
 UseGateway=no

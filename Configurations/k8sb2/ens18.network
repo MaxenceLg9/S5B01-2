@@ -4,12 +4,10 @@ Name=ens18
 [Network]
 DHCP=yes
 UseGateway=yes
-DNS=127.0.0.1
 
 [DHCPv4]
 ClientIdentifier=mac
-UseHostname=false
+UseDNS=no
 
 [DHCPv6]
 ClientIdentifier=mac
-UseHostname=false

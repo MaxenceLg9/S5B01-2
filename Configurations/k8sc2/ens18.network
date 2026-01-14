@@ -7,7 +7,7 @@ UseGateway=yes
 
 [DHCPv4]
 ClientIdentifier=mac
-UseDNS=yes
+UseDNS=no
 
 [DHCPv6]
 ClientIdentifier=mac

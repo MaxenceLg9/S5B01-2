@@ -1,8 +1,14 @@
 #!/bin/bash
 
-scp -i sisyphe_key Applicatif/* sisyphe@10.0.1.2:/etc/systemd/network/
-scp -i sisyphe_key Reseau/* sisyphe@10.0.1.3:/etc/systemd/network/
-scp -i sisyphe_key k8sa2/* sisyphe@10.0.1.4:/etc/systemd/network/ 
-scp -i sisyphe_key k8sb2/* sisyphe@10.0.1.5:/etc/systemd/network/
-scp -i sisyphe_key k8sc2/* sisyphe@10.0.1.6:/etc/systemd/network/
-scp -i sisyphe_key Backup/* sisyphe@10.0.1.10:/etc/systemd/network/
+echo "Reseau"
+scp -i ../SSH/sisyphe_key Applicatif/* sisyphe@10.0.1.2:/etc/systemd/network/
+echo "Applicatif"
+scp -i ../SSH/sisyphe_key Reseau/* sisyphe@10.0.1.3:/etc/systemd/network/
+echo "k8sa"
+scp -i ../SSH/sisyphe_key k8sa2/* sisyphe@10.0.1.4:/etc/systemd/network/
+echo "k8sb"
+scp -i ../SSH/sisyphe_key k8sb2/* sisyphe@10.0.1.5:/etc/systemd/network/
+echo "k8sc"
+scp -i ../SSH/sisyphe_key k8sc2/* sisyphe@10.0.1.6:/etc/systemd/network/
+echo "Backup"
+scp -i ../SSH/sisyphe_key Backup/* sisyphe@10.0.1.10:/etc/systemd/network/
