@@ -1,0 +1,3 @@
+[submodule "Kubernetes"]
+	path = Kubernetes
+	url = git@github.com:MaxenceLg9/S5B01-2-Kubernetes.git
