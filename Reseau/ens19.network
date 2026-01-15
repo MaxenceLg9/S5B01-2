@@ -1,7 +1,0 @@
-[Match]
-Name=ens19
-
-[Network]
-Address=10.0.1.2/28
-DHCP=no
-DNS=10.0.1.2
