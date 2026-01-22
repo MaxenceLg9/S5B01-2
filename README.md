@@ -8,7 +8,11 @@ This repository contains the configurations and documentation for the Nailloux P
 
 ## OSPF Configuration
 - Installation and configuration of OSPF for intra-site routing.  
-- OSPF configuration details for each router are included in `/configs/ospf/`.
+- OSPF configuration details for each router are included in `/Configurations/Routers' configurations/`.
+
+## MPLS Configuration
+- Installation and configuration of MPLS for intra-site routing.  
+- MPLS configuration details for each router are included in `/Configurations/Routers' configurations/`.
 
 ## DHCP Setup
 - **DHCPv4**: Server and client configurations, VLAN-specific ranges.  
