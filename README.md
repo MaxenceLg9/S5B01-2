@@ -29,7 +29,7 @@ or in the PDF file `SAÉ_S5B01_Phase4_Equipe2.pdf`.
 
 ## DNS
 - Installation and configuration of Unbound for internal name resolution. The configuration file can be found in `/Configurations/Reseau/unbound.conf.txt`,
-or in the PDF file SAÉ_S5B01_Phase4_Equipe2.pdf.
+or in the PDF file `SAÉ_S5B01_Phase4_Equipe2.pdf`.
 - Integration with Nginx reverse proxy and Docker environment.
 
 ## Network Machines
