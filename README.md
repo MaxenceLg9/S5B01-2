@@ -23,7 +23,7 @@ or in the PDF file SAÉ_S5B01_Phase4_Equipe2.pdf.
 - **DHCPv6**: Server setup, RA configuration on routers, and relay configuration.
 - The configuration file for the Network Server can be found in `/Configurations/Reseau/dhcpd.conf.txt`,
 or in the PDF file SAÉ_S5B01_Phase4_Equipe2.pdf.
-- The configuration file for the distant router can be found in `Configurations/Routers' configurations/logrt6.log`,
+- The configuration file for the distant router can be found in `/Configurations/Routers' configurations/logrt6.log`,
 or in the PDF file SAÉ_S5B01_Phase4_Equipe2.pdf.
 
 
