@@ -1,0 +1,84 @@
+server:
+
+    use-syslog: yes
+    #logfile: /var/log/unbound/unbound.log
+    #log-time-ascii: yes
+    #log-queries: yes
+    #log-replies: yes
+    #ecouter sur toutes les iface ipv4 avec le port 53
+    interface: 0.0.0.0
+    port: 53
+
+    #autorisation des sous reseaux internes
+    access-control: 127.0.0.0/8 allow
+    access-control: 10.0.1.0/28 allow
+    access-control: 10.1.1.0/29 allow
+    access-control: 192.168.10.0/27 allow
+    access-control: 192.168.20.0/25 allow
+    access-control: 172.16.100.0/30 allow
+    access-control: 192.168.11.0/28 allow
+    access-control: 192.168.21.0/27 allow
+    access-control: 192.168.12.0/28 allow
+    access-control: 192.168.22.0/27 allow
+    access-control: 10.0.3.0/30 allow
+    access-control: 10.0.10.0/30 allow
+    access-control: 192.168.30.0/24 allow
+
+    #autorisation des sous reseaux internes ipv6
+    access-control: ::1 allow
+    access-control: 2001:db8:1:1::/126 allow
+    access-control: 2001:db8:1:10::/64 allow
+    access-control: 2001:db8:1:20::/64 allow
+    access-control: 2001:db8:1:ff00::/127 allow
+    access-control: 2001:db8:1:ff01::/127 allow
+    access-control: 2001:db8:1:ff02::/127 allow
+    access-control: 2001:db8:1:ff03::/127 allow
+    access-control: 2001:db8:1:ff04::/127 allow
+    access-control: 2001:db8:1:2::/127 allow
+    access-control: 2001:db8:3:12::/64 allow
+    access-control: 2001:db8:3:22::/64 allow
+    access-control: 2001:db8:2:11::/64 allow
+    access-control: 2001:db8:2:21::/64 allow
+    #active ipv4
+    do-ip4: yes
+    do-ip6: yes
+    do-tcp: yes
+    do-udp: yes
+
+    #parametres de secu
+    hide-identity: yes
+    hide-version: yes
+    qname-minimisation: yes
+    harden-glue: yes
+    harden-dnssec-stripped: yes
+    unwanted-reply-threshold: 10000
+
+    #inclus
+    include: "/etc/unbound/unbound.conf.d/*.conf"
+
+    #iteration
+    module-config: "iterator"
+
+    #DNSSEC
+    auto-trust-anchor-file: "/var/lib/unbound/root.key"
+
+    local-zone: "nailloux.lan." static
+    local-data: "ns1.nailloux.lan. IN A 10.0.1.2"
+    local-data: "server.nailloux.lan. IN A 10.0.1.2"
+    local-data: "www.nailloux.lan. IN A 10.0.1.4"
+    local-data: "site.nailloux.lan. IN A 192.168.10.1"
+    local-data: "www.nailloux.lan.  IN A 10.0.3.1"
+    local-data: "ns1.nailloux.lan. IN AAAA 2001:db8:1:1::2"
+    local-data: "server.nailloux.lan. IN AAAA 2001:db8:1:1::2"
+    local-data: "www.nailloux.lan. IN AAAA 2001:db8:1:1::3"
+    local-data: "monitoring.nailloux.lan. IN A 10.0.1.2"
+    #Messagerie
+    local-data: "nailloux.lan. IN MX 10 mail.nailloux.lan."
+    local-data: "mail.nailloux.lan. IN A  10.0.1.2"
+    local-data: "mail.nailloux.lan. IN AAAA 2001:db8:1:1::2"
+    local-data: "smtp.nailloux.lan. IN CNAME mail.nailloux.lan."
+    local-data: "imap.nailloux.lan. IN CNAME mail.nailloux.lan."
+
+forward-zone:
+    name: "."
+    forward-addr: 100.100.100.254

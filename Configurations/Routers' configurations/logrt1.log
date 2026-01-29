@@ -1,0 +1,367 @@
+
+Using username "equipe2:Routeur1.1".
+
+Type the hot key to suspend the connection: <CTRL>Z
+
+Router>en
+Router#show run
+Building configuration...
+
+Current configuration : 10772 bytes
+!
+! Last configuration change at 11:27:04 UTC Fri Jan 16 2026
+!
+version 17.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service call-home
+platform qfp utilization monitor load 80
+platform punt-keepalive disable-kernel-core
+!
+hostname Router
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+!
+!
+!
+!         
+!
+!
+!
+!
+!
+!
+login on-success log
+ipv6 unicast-routing
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+! 
+! 
+! 
+! 
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+crypto pki trustpoint TP-self-signed-2010423997
+ enrollment selfsigned
+ subject-name cn=IOS-Self-Signed-Certificate-2010423997
+ revocation-check none
+ rsakeypair TP-self-signed-2010423997
+!
+crypto pki trustpoint SLA-TrustPoint
+ enrollment pkcs12
+ revocation-check crl
+!
+!
+crypto pki certificate chain TP-self-signed-2010423997
+ certificate self-signed 01
+  30820330 30820218 A0030201 02020101 300D0609 2A864886 F70D0101 05050030 
+  31312F30 2D060355 04031326 494F532D 53656C66 2D536967 6E65642D 43657274 
+  69666963 6174652D 32303130 34323339 3937301E 170D3235 31323135 31343334 
+  33365A17 0D333531 32313531 34333433 365A3031 312F302D 06035504 03132649 
+  4F532D53 656C662D 5369676E 65642D43 65727469 66696361 74652D32 30313034 
+  32333939 37308201 22300D06 092A8648 86F70D01 01010500 0382010F 00308201 
+  0A028201 0100D651 FE15F15A 8D387235 7F15F7CD D1E80CD9 A1F9C4E3 456F8A04 
+  0D8433C5 6C0AE1EA 55C5DA39 9DA5ED1F 47B72400 21BAB56A 570F0CDE 0674A0FC 
+  2F1D2945 958F6C08 0CE87B2F 4A3AE832 2CA3E89F 5C706EAE E3FC319B 5DAA0D25 
+  0003FF84 281348B8 F0E30638 1B9A77B7 12E21238 7677F24A 44CBC2EA D4ECC274 
+  8BA198CA 2B04BBBB 427FB45B B4609B72 671A8D00 D1705122 0D3183DE C6ECF393 
+  FDD3C005 30211E32 48AE4B0C 8852E6C3 7A69C7F8 B77D327A 362B6EE2 20B3418F 
+  28254155 509FF5BA F02AB5D5 5D96B291 F3A1F4FF 60A418F7 49650DE8 67B66763 
+  E3CAF5F6 33962ED3 A9859A1D A4F2A7E1 C93908CD 08B0EF8E 92657F71 317265D9 
+  F5F25290 59710203 010001A3 53305130 0F060355 1D130101 FF040530 030101FF 
+  301F0603 551D2304 18301680 1432FCED B4785785 DFDE7240 E931F584 CA60E2A9 
+  FE301D06 03551D0E 04160414 32FCEDB4 785785DF DE7240E9 31F584CA 60E2A9FE 
+  300D0609 2A864886 F70D0101 05050003 82010100 44BD5B41 F4AA4CCA 4DE8668D 
+  5D5871FA 78777878 835BED22 6B1669F1 EFDBB39E CCC94A24 A1EE061C 98D58E3B 
+  73755622 2EFFD6A1 C7D74FEE A4D1D9C4 7ABCDAE3 6EBB2C29 6DB9D585 C3211615 
+  C7A0E47E FE8146B8 52BE0EC3 FE2C8F4A F8796BB5 B68DFDF9 4EAAEC8C D47D866A 
+  F2CB7349 F58657F8 1465CD45 96A6EC34 8A48F1F8 AA69A75B E97B7784 FDDCACED 
+  920A1C79 727474D3 440F5211 E887691D 262BE214 D8061BC7 5028FF29 A0259224 
+  28587D90 10144CDF 71326588 DAF6D5D0 471EADF6 F27C05BC 462BD536 55C61D12 
+  E9095267 792DE88C C8249DA0 F388F214 58B9879F 82E32CED 61B312F3 0FB154B6 
+  24AB8A10 DCBFB616 8B6A3950 8883192B B15810BB
+  [6Cquit
+crypto pki certificate chain SLA-TrustPoint
+ certificate ca 01
+  30820321 30820209 A0030201 02020101 300D0609 2A864886 F70D0101 0B050030 
+  32310E30 0C060355 040A1305 43697363 6F312030 1E060355 04031317 43697363 
+  6F204C69 63656E73 696E6720 526F6F74 20434130 1E170D31 33303533 30313934 
+  3834375A 170D3338 30353330 31393438 34375A30 32310E30 0C060355 040A1305 
+  43697363 6F312030 1E060355 04031317 43697363 6F204C69 63656E73 696E6720 
+  526F6F74 20434130 82012230 0D06092A 864886F7 0D010101 05000382 010F0030 
+  82010A02 82010100 A6BCBD96 131E05F7 145EA72C 2CD686E6 17222EA1 F1EFF64D 
+  CBB4C798 212AA147 C655D8D7 9471380D 8711441E 1AAF071A 9CAE6388 8A38E520 
+  1C394D78 462EF239 C659F715 B98C0A59 5BBB5CBD 0CFEBEA3 700A8BF7 D8F256EE 
+  4AA4E80D DB6FD1C9 60B1FD18 FFC69C96 6FA68957 A2617DE7 104FDC5F EA2956AC 
+  7390A3EB 2B5436AD C847A2C5 DAB553EB 69A9A535 58E9F3E3 C0BD23CF 58BD7188 
+  68E69491 20F320E7 948E71D7 AE3BCC84 F10684C7 4BC8E00F 539BA42B 42C68BB7 
+  C7479096 B4CB2D62 EA2F505D C7B062A4 6811D95B E8250FC4 5D5D5FB8 8F27D191 
+  C55F0D76 61F9A4CD 3D992327 A8BB03BD 4E6D7069 7CBADF8B DF5F4368 95135E44 
+  DFC7C6CF 04DD7FD1 02030100 01A34230 40300E06 03551D0F 0101FF04 04030201 
+  06300F06 03551D13 0101FF04 05300301 01FF301D 0603551D 0E041604 1449DC85 
+  4B3D31E5 1B3E6A17 606AF333 3D3B4C73 E8300D06 092A8648 86F70D01 010B0500 
+  03820101 00507F24 D3932A66 86025D9F E838AE5C 6D4DF6B0 49631C78 240DA905 
+  604EDCDE FF4FED2B 77FC460E CD636FDB DD44681E 3A5673AB 9093D3B1 6C9E3D8B 
+  D98987BF E40CBD9E 1AECA0C2 2189BB5C 8FA85686 CD98B646 5575B146 8DFC66A8 
+  467A3DF4 4D565700 6ADF0F0D CF835015 3C04FF7C 21E878AC 11BA9CD2 55A9232C 
+  7CA7B7E6 C1AF74F6 152E99B7 B1FCF9BB E973DE7F 5BDDEB86 C71E3B49 1765308B 
+  5FB0DA06 B92AFE7F 494E8A9E 07B85737 F3A58BE1 1A48A229 C37C1E69 39F08678 
+  80DDCD16 D6BACECA EEBC7CF9 8428787B 35202CDC 60E4616A B623CDBD 230E3AFB 
+  418616A9 4093E049 4D10AB75 27E86F73 932E35B5 8862FDAE 0275156F 719BB2F0 
+  D697DF7F 28
+  [6Cquit
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no license feature hseck9
+license udi pid C8200-1N-4T sn FCZ2741R185
+license boot level network-advantage
+memory free low-watermark processor 67482
+!         
+diagnostic bootup level minimal
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+ mode none
+!
+!
+!
+!
+!
+!
+vlan internal allocation policy ascending
+!
+!
+! 
+!
+!
+!
+!
+!
+!         
+!
+!
+!
+!
+!
+!
+!
+! 
+! 
+!
+!
+interface Loopback0
+ ip address 2.2.2.2 255.255.255.255
+!
+interface GigabitEthernet0/0/0
+ ip address 172.16.100.18 255.255.255.252
+ ip ospf 1 area 1
+ negotiation auto
+ ipv6 address 2001:DB8:2:FF06::2/127
+!
+interface GigabitEthernet0/0/1
+ no ip address
+ negotiation auto
+!
+interface GigabitEthernet0/0/1.11
+ encapsulation dot1Q 11
+ ip address 192.168.11.1 255.255.255.240
+ ip helper-address 10.0.1.2
+ ip helper-address 10.1.1.2
+ ip access-group SITEP_FILTER_IN_VLAN11 in
+ ip access-group SITEP_FILTER_OUT_VLAN11 out
+ ipv6 address 2001:DB8:2:11::1/64
+!
+interface GigabitEthernet0/0/1.21
+ encapsulation dot1Q 21
+ ip address 192.168.21.1 255.255.255.224
+ ip helper-address 10.0.1.2
+ ip helper-address 10.1.1.2
+ ip access-group SITEP_FILTER_IN_VLAN21 in
+ ip access-group SITEP_FILTER_OUT_VLAN21 out
+ ipv6 address 2001:DB8:2:21::1/64
+!
+interface GigabitEthernet0/0/1.100
+ encapsulation dot1Q 100
+ ip address 10.1.1.1 255.255.255.248
+ ipv6 address 2001:DB8:10:1::1/64
+!
+interface GigabitEthernet0/0/2
+ no ip address
+ negotiation auto
+!
+interface GigabitEthernet0/0/3
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet0/1/0
+!
+interface GigabitEthernet0/1/1
+!
+interface GigabitEthernet0/1/2
+!
+interface GigabitEthernet0/1/3
+!
+interface GigabitEthernet0/1/4
+!
+interface GigabitEthernet0/1/5
+!
+interface GigabitEthernet0/1/6
+!
+interface GigabitEthernet0/1/7
+!
+interface Vlan1
+ no ip address
+!
+router ospf 1
+ router-id 2.2.2.2
+ network 2.2.2.2 0.0.0.0 area 0
+ network 10.1.1.0 0.0.0.7 area 1
+ network 172.16.100.16 0.0.0.3 area 1
+ network 192.168.11.0 0.0.0.15 area 1
+ network 192.168.21.0 0.0.0.31 area 1
+!
+ip http server
+ip http authentication local
+ip http secure-server
+ip forward-protocol nd
+ip route 0.0.0.0 0.0.0.0 172.16.100.17
+!
+!
+ip access-list extended SITEP_FILTER_IN_VLAN11
+ 10 permit ospf any any
+ 20 permit icmp any any
+ 30 permit udp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq domain
+ 40 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq domain
+ 50 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.2 eq 22
+ 60 permit udp any eq bootpc any eq bootps
+ 70 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.4 eq www
+ 80 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.4 eq 443
+ 90 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.4 eq 22
+ 100 permit tcp 192.168.11.0 0.0.0.15 host 10.0.1.4 eq 3022
+ 110 permit udp 192.168.11.0 0.0.0.15 host 10.1.1.2 eq domain
+ 120 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.2 eq domain
+ 130 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.2 eq 22
+ 140 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.3 eq www
+ 150 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.3 eq 443
+ 160 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.3 eq 22
+ 170 permit tcp 192.168.11.0 0.0.0.15 host 10.1.1.3 eq 3022
+ip access-list extended SITEP_FILTER_IN_VLAN21
+ 10 permit ospf any any
+ 20 permit icmp any any
+ 30 permit udp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq domain
+ 40 permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq domain
+ 50 permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.2 eq 22
+ 60 permit udp any eq bootpc any eq bootps
+ 70 permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.4 eq www
+ 80 permit tcp 192.168.21.0 0.0.0.31 host 10.0.1.4 eq 443
+ 90 permit udp 192.168.21.0 0.0.0.31 host 10.1.1.2 eq domain
+ 100 permit tcp 192.168.21.0 0.0.0.31 host 10.1.1.2 eq domain
+ 110 permit tcp 192.168.21.0 0.0.0.31 host 10.1.1.3 eq www
+ 120 permit tcp 192.168.21.0 0.0.0.31 host 10.1.1.3 eq 443
+ip access-list extended SITEP_FILTER_OUT_VLAN11
+ 10 permit ospf any any
+ 20 permit icmp any any
+ 30 permit udp host 10.0.1.2 eq domain 192.168.11.0 0.0.0.15
+ 40 permit tcp host 10.0.1.2 eq domain 192.168.11.0 0.0.0.15
+ 50 permit tcp host 10.0.1.2 eq 22 192.168.11.0 0.0.0.15
+ 60 permit udp any eq bootps any eq bootpc
+ 70 permit tcp host 10.0.1.4 eq www 192.168.11.0 0.0.0.15
+ 80 permit tcp host 10.0.1.4 eq 443 192.168.11.0 0.0.0.15
+ 90 permit tcp host 10.0.1.4 eq 22 192.168.11.0 0.0.0.15
+ 100 permit tcp host 10.0.1.4 eq 3022 192.168.11.0 0.0.0.15
+ 110 permit udp host 10.1.1.2 eq domain 192.168.11.0 0.0.0.15
+ 120 permit tcp host 10.1.1.2 eq domain 192.168.11.0 0.0.0.15
+ 130 permit tcp host 10.1.1.2 eq 22 192.168.11.0 0.0.0.15
+ 140 permit tcp host 10.1.1.3 eq www 192.168.11.0 0.0.0.15
+ 150 permit tcp host 10.1.1.3 eq 443 192.168.11.0 0.0.0.15
+ 160 permit tcp host 10.1.1.3 eq 22 192.168.11.0 0.0.0.15
+ 170 permit tcp host 10.1.1.3 eq 3022 192.168.11.0 0.0.0.15
+ip access-list extended SITEP_FILTER_OUT_VLAN21
+ 10 permit ospf any any
+ 20 permit icmp any any
+ 30 permit udp host 10.0.1.2 eq domain 192.168.21.0 0.0.0.31
+ 40 permit tcp host 10.0.1.2 eq domain 192.168.21.0 0.0.0.31
+ 50 permit udp any eq bootps any eq bootpc
+ 60 permit tcp host 10.0.1.4 eq www 192.168.21.0 0.0.0.31
+ 70 permit tcp host 10.0.1.4 eq 443 192.168.21.0 0.0.0.31
+ 80 permit udp host 10.1.1.2 eq domain 192.168.21.0 0.0.0.31
+ 90 permit tcp host 10.1.1.2 eq domain 192.168.21.0 0.0.0.31
+ 100 permit tcp host 10.1.1.3 eq www 192.168.21.0 0.0.0.31
+ 110 permit tcp host 10.1.1.3 eq 443 192.168.21.0 0.0.0.31
+!
+!
+!
+!
+!
+control-plane
+!
+!
+mgcp behavior rsip-range tgcp-only
+mgcp behavior comedia-role none
+mgcp behavior comedia-check-media-src disable
+mgcp behavior comedia-sdp-force disable
+!
+mgcp profile default
+!
+!
+!
+!
+!
+!
+line con 0
+ stopbits 1
+line aux 0
+line vty 0 4
+ login
+ transport input ssh
+line vty 5 14
+ login
+ transport input ssh
+!
+call-home
+ ! If contact email address in call-home is configured as sch-smart-licensing@cisco.com
+ ! the email address configured in Cisco Smart License Portal will be used as contact email address to send SCH notifications.
+ contact-email-addr sch-smart-licensing@cisco.com
+ profile "CiscoTAC-1"
+  active
+  destination transport-method http
+!
+!
+!
+!
+!
+!
+end
+
+Router#$                                                                     [8D
